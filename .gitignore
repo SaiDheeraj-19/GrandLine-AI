@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+functions/node_modules/
+
+# Production Build
+dist/
+
+# Env & Secrets (CRITICAL SECURITY)
+.env
+.env.local
+.env.*.local
+serviceAccountKey.json
+functions/serviceAccountKey.json
+*.pem
+
+# Firebase / Tooling
+firebase-debug.log*
+.firebase/
+
+# IDE / System
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.bak
