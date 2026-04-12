@@ -284,7 +284,6 @@ export default function NationalMonitoring() {
         console.warn("Polyline creation failed:", err);
       }
     });
-    });
   }, [issues, assistanceRequests, mapMode]);
 
   // ── Command Actions ─────────────────────────────────────────────────────
