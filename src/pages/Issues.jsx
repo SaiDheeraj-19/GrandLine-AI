@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 
 export default function Issues() {
+  const [issues, setIssues] = useState([]);
   const [filter, setFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('active'); // 'active' or 'archived'
   const [loading, setLoading] = useState(true);

@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { collection, onSnapshot, query, orderBy, limit } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, limit, doc, updateDoc, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase.js';
 import Sidebar from '../components/Sidebar.jsx';
 import NotificationBell from '../components/NotificationBell.jsx';
+import toast from 'react-hot-toast';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 const INDIA_CENTER = { lat: 22.5, lng: 82.5 };
