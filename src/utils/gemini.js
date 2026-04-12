@@ -58,7 +58,9 @@ export async function extractIntelFrontend(content, contentType) {
       "severity": <1-5 numeric>,
       "affected_count": <numeric>,
       "urgency_score": <1-100 numeric>,
-      "summary": "<one sentence overview max 12 words>",
+      "summary": "<A 1-sentence tactical summary in English>",
+      "original_summary": "<The summary in original language if not English, otherwise same as summary>",
+      "translation_detected": <true/false if input was not English>,
       "recommended_action": "<action for responders>",
       "skills_needed": ["medical", "rescue", "food"]
     }

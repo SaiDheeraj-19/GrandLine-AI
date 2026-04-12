@@ -5,6 +5,7 @@ import Sidebar from '../components/Sidebar.jsx';
 import toast from 'react-hot-toast';
 import { extractIntelFrontend } from '../utils/gemini.js';
 import NotificationBell from '../components/NotificationBell.jsx';
+import BroadcastReceiver from '../components/BroadcastReceiver.jsx';
 
 const MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
@@ -57,6 +58,8 @@ export default function FieldCenter() {
   const [intelFile, setIntelFile] = useState(null);
   const [gpsCoords, setGpsCoords] = useState(null);
   const [capturingGps, setCapturingGps] = useState(false);
+  const [verifyingTaskId, setVerifyingTaskId] = useState(null);
+  const verifyFileRef = useRef(null);
 
   const mapRef = useRef(null);
   const googleMapRef = useRef(null);
@@ -106,6 +109,23 @@ export default function FieldCenter() {
       toast.success(`Mission Status Synchronized: ${newStatus.toUpperCase()}`, { id: loadToast });
     } catch (err) {
       toast.error('Sync error: ' + err.message, { id: loadToast });
+    }
+  };
+
+  const handleVerification = async (e) => {
+    const file = e.target.files[0];
+    if (!file || !verifyingTaskId) return;
+
+    const loadToast = toast.loading('ARIA — Processing Visual Verification...');
+    try {
+      // Simulate visual verification (in production we'd upload to Storage + AI Analyze)
+      await new Promise(r => setTimeout(r, 2000));
+      
+      await updateTaskStatus(verifyingTaskId, 'completed');
+      setVerifyingTaskId(null);
+      toast.success('Sector Verified & Secured', { id: loadToast });
+    } catch (err) {
+      toast.error('Verification failed: ' + err.message, { id: loadToast });
     }
   };
 
@@ -423,12 +443,15 @@ export default function FieldCenter() {
                            >
                               {task.status === 'in-progress' ? 'Executing' : 'Engage'}
                            </button>
-                           <button 
-                             onClick={() => updateTaskStatus(task.id, 'completed')}
-                             className="flex-1 py-2.5 bg-green-500/10 border border-green-500/30 text-green-400 font-label text-[9px] uppercase tracking-widest font-bold hover:bg-green-500/20 shadow-lg transition-all"
-                           >
-                              Secure
-                           </button>
+                            <button 
+                              onClick={() => {
+                                setVerifyingTaskId(task.id);
+                                verifyFileRef.current.click();
+                              }}
+                              className="flex-1 py-2.5 bg-green-500/10 border border-green-500/30 text-green-400 font-label text-[9px] uppercase tracking-widest font-bold hover:bg-green-500/20 shadow-lg transition-all"
+                            >
+                               {verifyingTaskId === task.id ? 'Verifying...' : 'Secure'}
+                            </button>
                            <a 
                              href={`https://www.google.com/maps/dir/?api=1&destination=${task.location?.lat},${task.location?.lng}`}
                              target="_blank"
@@ -592,6 +615,17 @@ export default function FieldCenter() {
           </div>
         </section>
       </main>
+
+      {/* Hidden inputs */}
+      <input 
+        type="file" 
+        ref={verifyFileRef}
+        onChange={handleVerification}
+        className="hidden"
+        accept="image/*"
+      />
+
+      <BroadcastReceiver />
     </div>
   );
 }

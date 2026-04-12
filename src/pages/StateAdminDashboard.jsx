@@ -7,6 +7,7 @@ import { db } from '../firebase.js';
 import toast from 'react-hot-toast';
 import Sidebar from '../components/Sidebar.jsx';
 import NotificationBell from '../components/NotificationBell.jsx';
+import BroadcastReceiver from '../components/BroadcastReceiver.jsx';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 const MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
@@ -869,6 +870,14 @@ export default function StateAdminDashboard() {
                           {activeIssue.summary}
                         </p>
                       )}
+                      {activeIssue.translation_detected && activeIssue.original_summary && (
+                        <div className="mt-2 p-2 bg-blue-500/5 border border-blue-500/10 rounded-sm">
+                           <p className="font-label text-[6px] text-blue-400 uppercase font-black mb-1">ARIA Dialect Original</p>
+                           <p className="font-body text-[8px] text-white/30 italic leading-snug">
+                              "{activeIssue.original_summary}"
+                           </p>
+                        </div>
+                      )}
                     </div>
 
                     {/* Already assigned volunteer */}
@@ -1125,6 +1134,7 @@ export default function StateAdminDashboard() {
           </aside>
         </div>
       </main>
+      <BroadcastReceiver />
     </div>
   );
 }

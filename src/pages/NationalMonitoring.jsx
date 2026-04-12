@@ -83,6 +83,11 @@ export default function NationalMonitoring() {
   const [targetState, setTargetState] = useState('');
   const [loading, setLoading] = useState(true);
   const [tick, setTick]       = useState(0);         // clock tick
+  const [broadcastMessage, setBroadcastMessage] = useState('');
+  const [isBroadcasting, setIsBroadcasting] = useState(false);
+  const [mapMode, setMapMode]   = useState('tactical'); // tactical or heatmap
+  const heatmapRef = useRef(null);
+
   const mapRef       = useRef(null);
   const googleMapRef = useRef(null);
   const markersRef   = useRef([]);
@@ -176,42 +181,72 @@ export default function NationalMonitoring() {
   useEffect(() => {
     if (!googleMapRef.current || !window.google?.maps?.Marker) return;
     
-    // Cleanup previous markers
     markersRef.current.forEach(m => {
       if (m && typeof m.setMap === 'function') m.setMap(null);
     });
     markersRef.current = [];
 
-    issues.forEach(issue => {
-      if (!issue.location?.lat || !issue.location?.lng) return;
-      const urgencyScore = issue.urgency_score || 0;
-      const isCritical = urgencyScore >= 80;
-      const isHigh = urgencyScore >= 60;
-      const isMedium = urgencyScore >= 40;
-      const pinColor = isHigh ? '#ef4444' : isMedium ? '#ffd166' : '#22c55e';
+    if (heatmapRef.current) {
+      heatmapRef.current.setMap(null);
+      heatmapRef.current = null;
+    }
 
-      try {
-        const marker = new window.google.maps.Marker({
-          position: { lat: issue.location.lat, lng: issue.location.lng },
-          map: googleMapRef.current,
-          title: issue.summary || '',
-          icon: {
-            path: 'M 0,-14 C -6,-14 -10,-8 -10,-3 C -10,6 0,14 0,14 C 0,14 10,6 10,-3 C 10,-8 6,-14 0,-14 Z',
-            fillColor: pinColor,
-            fillOpacity: 0.95,
-            strokeColor: pinColor,
-            strokeWeight: isCritical ? 2 : 1,
-            strokeOpacity: 0.3,
-            scale: isCritical ? 1.5 : 1.1,
-            anchor: new window.google.maps.Point(0, 14),
-          },
-          animation: (isCritical && window.google.maps.Animation) ? window.google.maps.Animation.BOUNCE : null,
+    if (mapMode === 'heatmap') {
+      const heatPoints = issues
+        .filter(i => i.location?.lat && i.location?.lng)
+        .map(i => {
+          return {
+            location: new window.google.maps.LatLng(i.location.lat, i.location.lng),
+            weight: (i.urgency_score || 0) / 10
+          };
         });
-        markersRef.current.push(marker);
-      } catch (err) {
-        console.warn("Marker creation failed:", err);
-      }
-    });
+
+      heatmapRef.current = new window.google.maps.visualization.HeatmapLayer({
+        data: heatPoints,
+        map: googleMapRef.current,
+        radius: 40,
+        opacity: 0.8,
+        gradient: [
+          'rgba(0, 255, 255, 0)', 'rgba(0, 255, 255, 1)', 'rgba(0, 191, 255, 1)',
+          'rgba(0, 127, 255, 1)', 'rgba(0, 63, 255, 1)', 'rgba(0, 0, 255, 1)',
+          'rgba(0, 0, 223, 1)', 'rgba(0, 0, 191, 1)', 'rgba(0, 0, 159, 1)',
+          'rgba(0, 0, 127, 1)', 'rgba(63, 0, 91, 1)', 'rgba(127, 0, 63, 1)',
+          'rgba(191, 0, 31, 1)', 'rgba(255, 0, 0, 1)'
+        ]
+      });
+    } else {
+      // tactical markers
+      issues.forEach(issue => {
+        if (!issue.location?.lat || !issue.location?.lng) return;
+        const urgencyScore = issue.urgency_score || 0;
+        const isCritical = urgencyScore >= 80;
+        const isHigh = urgencyScore >= 60;
+        const isMedium = urgencyScore >= 40;
+        const pinColor = isHigh ? '#ef4444' : isMedium ? '#ffd166' : '#22c55e';
+
+        try {
+          const marker = new window.google.maps.Marker({
+            position: { lat: issue.location.lat, lng: issue.location.lng },
+            map: googleMapRef.current,
+            title: issue.summary || '',
+            icon: {
+              path: 'M 0,-14 C -6,-14 -10,-8 -10,-3 C -10,6 0,14 0,14 C 0,14 10,6 10,-3 C 10,-8 6,-14 0,-14 Z',
+              fillColor: pinColor,
+              fillOpacity: 0.95,
+              strokeColor: pinColor,
+              strokeWeight: isCritical ? 2 : 1,
+              strokeOpacity: 0.3,
+              scale: isCritical ? 1.5 : 1.1,
+              anchor: new window.google.maps.Point(0, 14),
+            },
+            animation: (isCritical && window.google.maps.Animation) ? window.google.maps.Animation.BOUNCE : null,
+          });
+          markersRef.current.push(marker);
+        } catch (err) {
+          console.warn("Marker creation failed:", err);
+        }
+      });
+    }
 
     // Coordination Lines
     assistanceRequests.forEach(req => {
@@ -249,7 +284,8 @@ export default function NationalMonitoring() {
         console.warn("Polyline creation failed:", err);
       }
     });
-  }, [issues, assistanceRequests]);
+    });
+  }, [issues, assistanceRequests, mapMode]);
 
   // ── Command Actions ─────────────────────────────────────────────────────
   const handleForwardRequest = async () => {
@@ -286,6 +322,26 @@ export default function NationalMonitoring() {
       setSelectedRequest(null);
       setTargetState('');
     } catch (err) { toast.error(err.message, { id: t }); }
+  };
+
+  const handleBroadcast = async () => {
+    if (!broadcastMessage.trim()) return;
+    const t = toast.loading('ARIA — Initiating Neural Broadcast...');
+    setIsBroadcasting(true);
+    try {
+      await addDoc(collection(db, 'broadcasts'), {
+        message: broadcastMessage,
+        createdAt: serverTimestamp(),
+        active: true,
+        type: 'NATIONAL_DIRECTIVE'
+      });
+      toast.success('Broadcast Uplink Active', { id: t });
+      setBroadcastMessage('');
+    } catch (err) {
+      toast.error('Uplink failed: ' + err.message, { id: t });
+    } finally {
+      setIsBroadcasting(false);
+    }
   };
 
   // ── Derived Analytics ────────────────────────────────────────────────────
@@ -419,6 +475,11 @@ export default function NationalMonitoring() {
                         </span>
                       </div>
                       <p className="font-body text-[10px] text-white/70 leading-snug truncate">{event.message}</p>
+                      {event.translation_detected && (
+                        <p className="font-label text-[6px] text-[#ffd166]/40 uppercase tracking-widest mt-1 italic">
+                          Neural Translation Active
+                        </p>
+                      )}
                       <div className="flex items-center gap-2 mt-1">
                         {event.state && (
                           <span className="font-label text-[6px] uppercase tracking-wider text-[#ffd166]/50 px-1.5 py-0.5 border border-[#ffd166]/10 bg-[#ffd166]/5">
@@ -455,6 +516,22 @@ export default function NationalMonitoring() {
               </div>
             </div>
 
+            {/* Map Mode Toggle Overlay */}
+            <div className="absolute top-4 right-4 z-10 flex gap-1 p-1 bg-[#060b14]/80 backdrop-blur-xl border border-white/5 shadow-2xl pointer-events-auto">
+               <button 
+                 onClick={() => setMapMode('tactical')}
+                 className={`px-3 py-1.5 font-label text-[7px] uppercase tracking-widest font-black transition-all ${mapMode === 'tactical' ? 'bg-[#ffd166] text-[#060b14]' : 'text-white/30 hover:text-white hover:bg-white/5'}`}
+               >
+                 Tactical
+               </button>
+               <button 
+                 onClick={() => setMapMode('heatmap')}
+                 className={`px-3 py-1.5 font-label text-[7px] uppercase tracking-widest font-black transition-all ${mapMode === 'heatmap' ? 'bg-red-500 text-white' : 'text-white/30 hover:text-white hover:bg-white/5'}`}
+               >
+                 Predictive Surge (Heatmap)
+               </button>
+            </div>
+
             {/* Bottom HUD strip */}
             <div className="absolute bottom-0 left-0 right-0 pointer-events-none z-10 p-4 flex items-end justify-between">
               {/* Issue count badge */}
@@ -487,6 +564,35 @@ export default function NationalMonitoring() {
 
           {/* ── RIGHT: Analytics Panel ──────────────────────────────────── */}
           <aside className="col-span-12 lg:col-span-3 border-l border-white/5 flex flex-col bg-[#07090f] overflow-hidden">
+            
+            {/* Neural Broadcast Panel */}
+            <div className="flex-shrink-0 px-5 py-4 border-b border-white/10 bg-red-950/10">
+               <div className="flex items-center gap-2 mb-4">
+                  <span className="material-symbols-outlined text-red-500 text-sm animate-pulse">campaign</span>
+                  <span className="font-label text-[9px] uppercase tracking-widest text-red-400 font-black">Neural Broadcast Uplink</span>
+               </div>
+               <textarea 
+                  value={broadcastMessage}
+                  onChange={(e) => setBroadcastMessage(e.target.value)}
+                  placeholder="ENTER NATIONAL COMMAND DIRECTIVE..."
+                  className="w-full bg-black/40 border border-white/10 p-3 h-20 font-mono text-[9px] text-red-400 placeholder:text-red-900/40 focus:border-red-500/30 outline-none resize-none transition-all"
+               />
+               <button 
+                 onClick={handleBroadcast}
+                 disabled={isBroadcasting || !broadcastMessage.trim()}
+                 className="w-full mt-2 py-2.5 bg-red-500/20 border border-red-500/40 text-red-500 font-label text-[8px] uppercase tracking-[0.2em] font-black hover:bg-red-500 hover:text-white transition-all disabled:opacity-20 flex items-center justify-center gap-2"
+               >
+                  {isBroadcasting ? (
+                    <span className="animate-pulse">TRANSMITTING...</span>
+                  ) : (
+                    <>
+                      <span className="material-symbols-outlined text-[10px]">bolt</span>
+                      EXECUTE DIRECTIVE
+                    </>
+                  )}
+               </button>
+            </div>
+
             <div className="flex-shrink-0 px-5 py-4 border-b border-white/5">
               <span className="font-label text-[9px] uppercase tracking-widest text-[#ffd166] font-black flex items-center gap-2">
                 <span className="material-symbols-outlined text-sm">monitoring</span>
