@@ -20,9 +20,12 @@ export default function BroadcastReceiver() {
     const unsub = onSnapshot(q, snap => {
       if (!snap.empty) {
         const data = snap.docs[0].data();
-        // Check if it's active AND recent (sanity check)
-        if (data.active && data.timestamp?.toDate() > oneHourAgo) {
-          setActiveBroadcast({ id: snap.docs[0].id, ...data });
+        const broadcastId = snap.docs[0].id;
+        const acknowledgedId = localStorage.getItem('grandline_last_broadcast');
+
+        // Show if active, recent, AND not already acknowledged in this browser
+        if (data.active && data.timestamp?.toDate() > oneHourAgo && acknowledgedId !== broadcastId) {
+          setActiveBroadcast({ id: broadcastId, ...data });
         } else {
           setActiveBroadcast(null);
         }
@@ -33,6 +36,13 @@ export default function BroadcastReceiver() {
 
     return () => unsub();
   }, []);
+
+  const handleAcknowledge = () => {
+    if (activeBroadcast) {
+      localStorage.setItem('grandline_last_broadcast', activeBroadcast.id);
+      setActiveBroadcast(null);
+    }
+  };
 
   if (!activeBroadcast) return null;
 
@@ -73,7 +83,7 @@ export default function BroadcastReceiver() {
               </p>
 
               <button 
-                onClick={() => setActiveBroadcast(null)}
+                onClick={handleAcknowledge}
                 className="px-10 py-3 bg-red-500 text-white font-label text-[10px] uppercase font-black tracking-[0.2em] hover:bg-red-600 transition-all shadow-lg"
               >
                  {t('btn_acknowledge')}

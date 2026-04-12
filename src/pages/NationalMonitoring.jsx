@@ -139,6 +139,7 @@ export default function NationalMonitoring() {
     if (mapReadyRef.current || !mapRef.current || !window.google?.maps) return;
     mapReadyRef.current = true;
     try {
+      // Deterministic National Centering
       googleMapRef.current = new window.google.maps.Map(mapRef.current, {
         center: INDIA_CENTER, zoom: 5,
         styles: MAP_STYLE,
@@ -291,7 +292,7 @@ export default function NationalMonitoring() {
   // ── Command Actions ─────────────────────────────────────────────────────
   const handleForwardRequest = async () => {
     if (!selectedRequest || !targetState) return;
-    const t = toast.loading('Routing assistance request...');
+    const tId = toast.loading('Routing Strategic Resources...');
     try {
       const docRef = doc(db, 'assistance_requests', selectedRequest.id);
       await updateDoc(docRef, {
@@ -301,45 +302,47 @@ export default function NationalMonitoring() {
         forwardedAt: serverTimestamp(),
       });
 
-      await addDoc(collection(db, 'notifications'), {
-        type: 'forward',
-        userId: `admin_${targetState}`,
-        message: `DIRECTIVE: Support requested for ${selectedRequest.fromState}`,
-        requestId: selectedRequest.id,
-        read: false,
-        createdAt: serverTimestamp(),
-      });
-
+      // DETERMINISTIC LOGGING: Log Routing Event to Central Activity Feed
       await addDoc(collection(db, 'events'), {
-        type: 'request_forwarded',
-        message: `HQ Forwarded: ${selectedRequest.fromState} assistance request → ${targetState}`,
-        fromState: selectedRequest.fromState,
-        targetState: targetState,
-        issueId: selectedRequest.issueId,
-        timestamp: serverTimestamp(),
+        type: 'assignment',
+        message: `Strategic Routing: Resources from ${targetState} deployed to ${selectedRequest.fromState}`,
+        state: 'National Center',
+        timestamp: serverTimestamp()
       });
 
-      toast.success('Request Routed.', { id: t });
+      toast.success('Inter-State Deployment Authorized', { id: tId });
       setSelectedRequest(null);
       setTargetState('');
-    } catch (err) { toast.error(err.message, { id: t }); }
+    } catch (err) { 
+      toast.error('Routing Node Failure', { id: tId }); 
+    }
   };
 
   const handleBroadcast = async () => {
     if (!broadcastMessage.trim()) return;
-    const t = toast.loading('ARIA — Initiating Neural Broadcast...');
+    const tId = toast.loading('ARIA — Transmitting Neural Broadcast...');
     setIsBroadcasting(true);
     try {
       await addDoc(collection(db, 'broadcasts'), {
         message: broadcastMessage,
-        createdAt: serverTimestamp(),
+        timestamp: serverTimestamp(),
         active: true,
-        type: 'NATIONAL_DIRECTIVE'
+        type: 'NATIONAL_DIRECTIVE',
+        author: 'National Command'
       });
-      toast.success('Broadcast Uplink Active', { id: t });
+
+      // Log Deployment Event to Central Activity Feed
+      await addDoc(collection(db, 'events'), {
+        type: 'deployment',
+        message: `National Override: ${broadcastMessage.slice(0, 40)}...`,
+        state: 'National Command',
+        timestamp: serverTimestamp()
+      });
+
+      toast.success('Broadcast Uplink Latched', { id: tId });
       setBroadcastMessage('');
-    } catch (err) {
-      toast.error('Uplink failed: ' + err.message, { id: t });
+    } catch (err) { 
+      toast.error('Transmission Fault', { id: tId }); 
     } finally {
       setIsBroadcasting(false);
     }

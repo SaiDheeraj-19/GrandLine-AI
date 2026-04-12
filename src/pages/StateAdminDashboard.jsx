@@ -211,10 +211,13 @@ export default function StateAdminDashboard() {
     const center = viewMode === 'state'
       ? (STATE_CENTERS[userState] || INDIA_CENTER)
       : INDIA_CENTER;
+    const zoom = viewMode === 'state' ? 7 : 5;
+    
     try {
       googleMapRef.current = new window.google.maps.Map(mapRef.current, {
-        center, zoom: viewMode === 'state' ? 7 : 5,
+        center, zoom,
         styles: MAP_STYLE, disableDefaultUI: true, backgroundColor: '#070c18',
+        gestureHandling: 'cooperative'
       });
     } catch (err) {
       console.error("StateAdminDashboard: Map init failed:", err);

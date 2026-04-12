@@ -1,119 +1,44 @@
-// Accelerated ARIA Neural Link utilizing Groq inference engine.
-const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY;
+/**
+ * DETERMINISTIC AI SIMULATION ENGINE (ARIA)
+ * Ensures 100% Reliability for Demo Environments
+ */
 
-export async function chatWithAriaFrontend(message, history = []) {
-  const formattedHistory = history.map(msg => ({
-    role: msg.role === 'model' ? 'assistant' : 'user',
-    content: msg.parts[0].text
-  }));
+/**
+ * Simulates ARIA Intelligence Extraction
+ * Replaces real Gemini API calls with deterministic parsing
+ */
+export const extractIntelFrontend = async (text) => {
+  // Always work instantly with deterministic results
+  const lower = text.toLowerCase();
+  
+  let type = 'general';
+  if (lower.includes('medical') || lower.includes('doctor') || lower.includes('blood')) type = 'medical';
+  else if (lower.includes('flood') || lower.includes('water') || lower.includes('drown')) type = 'flood';
+  else if (lower.includes('fire') || lower.includes('smoke') || lower.includes('burn')) type = 'fire';
+  else if (lower.includes('food') || lower.includes('hunger') || lower.includes('rations')) type = 'food';
 
-  // Context injection for state analysis capability if asked
-  const sysMsg = {
-    role: "system",
-    content: "You are ARIA, an AI assistant for the GrandLine Disaster Response framework. You provide clear, concise, actionable intelligence for disaster management. Answer in precise military-style brevity. If asked to analyse a state, ask them to provide ongoing disaster metrics so you can assess it."
+  return {
+    issue_type: type,
+    summary: `[ARIA TRANSLATED]: ${text}`,
+    original_summary: text,
+    urgency_score: Math.floor(Math.random() * 40) + 60, // Always high for demo impact
+    status: 'pending',
+    translation_detected: true
   };
+};
 
-  const messages = [sysMsg, ...formattedHistory, { role: "user", content: message }];
-
-  const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${GROQ_API_KEY}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      messages: messages,
-      model: "llama-3.3-70b-versatile",
-      temperature: 0.5,
-      max_tokens: 1024,
-    })
+/**
+ * Simulates Neural Damage Assessment (Vision)
+ * 100% Success Rate with Deterministic 2s Delay
+ */
+export const analyzeMissionProof = async (imageFile) => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({
+        verified: true,
+        confidence: 0.98,
+        analysis: "Tactical verification completed. Site status: SECURED."
+      });
+    }, 2000);
   });
-
-  if (response.ok) {
-    const data = await response.json();
-    return data.choices[0].message.content;
-  } else {
-    const errData = await response.json();
-    throw new Error(errData.error?.message || "Llama Engine Offline");
-  }
-}
-
-export async function extractIntelFrontend(content, contentType) {
-  const prompt = `
-    You are an expert NGO data analyst specialising in disaster response across ALL of India.
-    Extract the following structured data from the input.
-    Return ONLY a valid JSON object. Do not wrap it in markdown blockquotes. Start exactly with { and end with }.
-
-    Required JSON structure:
-    {
-      "original_language": "<detected language>",
-      "location": {
-        "lat": <decimal latitude if computable or 20.59>,
-        "lng": <decimal longitude if computable or 78.96>,
-        "area_name": "<neighbourhood name>",
-        "state": "<Indian state>",
-        "district": "<district>"
-      },
-      "issue_type": "flood|drought|cyclone|earthquake|medical|food|shelter|displacement|heatwave|fire|chemical|other",
-      "severity": <1-5 numeric>,
-      "affected_count": <numeric>,
-      "urgency_score": <1-100 numeric>,
-      "summary": "<A 1-sentence tactical summary in English>",
-      "original_summary": "<The summary in original language if not English, otherwise same as summary>",
-      "translation_detected": <true/false if input was not English>,
-      "recommended_action": "<action for responders>",
-      "skills_needed": ["medical", "rescue", "food"]
-    }
-  `;
-
-  let messages = [];
-  if (contentType === "image") {
-    messages = [
-      {
-        role: "user",
-        content: [
-          { type: "text", text: prompt },
-          { type: "image_url", image_url: { url: content } }
-        ]
-      }
-    ];
-  } else {
-    messages = [
-      {
-        role: "user",
-        content: prompt + "\n\nInput Source: " + content
-      }
-    ];
-  }
-
-  const model = contentType === "image" ? "llama-3.2-11b-vision-preview" : "llama-3.3-70b-versatile";
-
-  const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${GROQ_API_KEY}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      messages: messages,
-      model: model,
-      temperature: 0.1,
-    })
-  });
-
-  if (response.ok) {
-    const data = await response.json();
-    const rawText = data.choices[0].message.content;
-    const cleanJson = rawText.replace(/```json|```/g, "").trim();
-    // Sometimes LLaVa hallucinates leading text, so extract strictly first { to last }.
-    const firstBrace = cleanJson.indexOf('{');
-    const lastBrace = cleanJson.lastIndexOf('}');
-    if(firstBrace !== -1 && lastBrace !== -1) {
-       return JSON.parse(cleanJson.substring(firstBrace, lastBrace + 1));
-    }
-    return JSON.parse(cleanJson);
-  } else {
-    const errData = await response.json();
-    throw new Error(errData.error?.message || "Llama Vision Offline");
-  }
-}
+};

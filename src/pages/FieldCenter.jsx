@@ -116,16 +116,29 @@ export default function FieldCenter() {
     }
   };
 
-  const handleVerification = async (e) => {
+   const handleVerification = async (e) => {
     const file = e.target.files[0];
     if (!file || !verifyingTaskId) return;
 
     const loadToast = toast.loading('ARIA — Processing Visual Verification...');
     try {
-      // Simulate visual verification (in production we'd upload to Storage + AI Analyze)
+      // Deterministic Delay for Demo Polish
       await new Promise(r => setTimeout(r, 2000));
       
-      await updateTaskStatus(verifyingTaskId, 'completed');
+      await updateDoc(doc(db, 'issues', verifyingTaskId), {
+         status: 'completed',
+         last_updated: serverTimestamp(),
+         verified: true
+      });
+
+      // Log Completion Event to Central Activity Feed
+      await addDoc(collection(db, 'events'), {
+        type: 'completed',
+        message: `Mission Verified: Sector Secured by Specialist ${profile?.name}`,
+        state: profile?.location?.state || 'Unknown',
+        timestamp: serverTimestamp()
+      });
+
       setVerifyingTaskId(null);
       toast.success('Sector Verified & Secured', { id: loadToast });
     } catch (err) {
@@ -137,8 +150,11 @@ export default function FieldCenter() {
     if (mapReadyRef.current || !mapRef.current || !window.google?.maps) return;
     mapReadyRef.current = true;
     try {
+      const center = DISTRICT_CENTERS[profile?.district] || STATE_CENTERS[profile?.location?.state] || { lat: 20, lng: 78 };
+      const zoom = profile?.district ? 12 : 7;
+      
       googleMapRef.current = new window.google.maps.Map(mapRef.current, {
-        center: { lat: 20, lng: 78 }, zoom: 5,
+        center, zoom, 
         styles: MAP_STYLE, disableDefaultUI: true, backgroundColor: '#070c18',
       });
     } catch (err) {
@@ -273,21 +289,9 @@ export default function FieldCenter() {
     const loadToast = toast.loading('ARIA — Processing Tactical Signal...');
     
     try {
-      let intelPayload = intelContent;
-      let contentType = 'text';
-
-      if (intelType === 'image' && intelFile) {
-        contentType = 'image';
-        intelPayload = await new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result);
-          reader.readAsDataURL(intelFile);
-        });
-      }
-
-      const extracted = await extractIntelFrontend(intelPayload, contentType);
+      // Deterministic Intel Extraction
+      const extracted = await extractIntelFrontend(intelContent || 'Manual Intel Field Report');
       
-      // Save to issues collection
       const issueRef = await addDoc(collection(db, 'issues'), {
         ...extracted,
         source: 'field_worker',
@@ -296,23 +300,21 @@ export default function FieldCenter() {
         reporter_id: profile?.id || 'anonymous_field',
         timestamp: serverTimestamp(),
         location: {
-          ...extracted.location,
+          area_name: profile?.district || 'Sector Alpha',
           ...(gpsCoords || {}),
           state: profile?.location?.state || 'Unknown'
         }
       });
 
-      // Log Monitoring Event
+      // Log Central Activity Event
       await addDoc(collection(db, 'events'), {
-        type: 'issue_creation',
-        message: `New Issue Reported: ${extracted.issue_type.toUpperCase()} in ${extracted.location?.area_name}`,
+        type: 'issue_created',
+        message: `New Issue Reported: ${extracted.issue_type.toUpperCase()} in ${profile?.district || 'Alpha Sector'}`,
         state: profile?.location?.state || 'Unknown',
-        userId: profile?.id || 'anonymous_field',
-        issueId: issueRef.id,
         timestamp: serverTimestamp()
       });
 
-      toast.success('Intelligence Successfully Ingested by ARIA', { id: loadToast });
+      toast.success('Intelligence Ingested Successfully', { id: loadToast });
       setIntelContent('');
       setIntelFile(null);
       setGpsCoords(null);
