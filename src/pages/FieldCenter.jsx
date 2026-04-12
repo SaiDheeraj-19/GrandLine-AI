@@ -1,10 +1,42 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { collection, onSnapshot, query, where, doc, updateDoc, addDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../firebase.js';
 import Sidebar from '../components/Sidebar.jsx';
 import toast from 'react-hot-toast';
 import { extractIntelFrontend } from '../utils/gemini.js';
 import NotificationBell from '../components/NotificationBell.jsx';
+
+const MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+
+const MAP_STYLE = [
+  { elementType: 'geometry', stylers: [{ color: '#060b14' }] },
+  { elementType: 'labels.text.fill', stylers: [{ color: '#ffd166' }, { lightness: -40 }] },
+  { elementType: 'labels.text.stroke', stylers: [{ color: '#060b14' }, { weight: 3 }] },
+  { featureType: 'administrative.country', elementType: 'geometry.stroke', stylers: [{ color: '#ffd166' }, { weight: 1 }, { opacity: 0.5 }] },
+  { featureType: 'administrative.province', elementType: 'geometry.stroke', stylers: [{ color: '#ffd16650' }, { weight: 0.5 }] },
+  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#0a1628' }] },
+  { featureType: 'landscape', elementType: 'geometry', stylers: [{ color: '#080d18' }] },
+  { featureType: 'road', stylers: [{ visibility: 'off' }] },
+  { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+];
+
+const STATE_CENTERS = {
+  'Andhra Pradesh': { lat: 15.9129, lng: 79.74 }, 'Arunachal Pradesh': { lat: 28.218, lng: 94.7278 },
+  'Assam': { lat: 26.2006, lng: 92.9376 }, 'Bihar': { lat: 25.0961, lng: 85.3131 },
+  'Chhattisgarh': { lat: 21.2787, lng: 81.8661 }, 'Goa': { lat: 15.2993, lng: 74.124 },
+  'Gujarat': { lat: 22.2587, lng: 71.1924 }, 'Haryana': { lat: 29.0588, lng: 76.0856 },
+  'Himachal Pradesh': { lat: 31.1048, lng: 77.1734 }, 'Jharkhand': { lat: 23.6102, lng: 85.2799 },
+  'Karnataka': { lat: 15.3173, lng: 75.7139 }, 'Kerala': { lat: 10.8505, lng: 76.2711 },
+  'Madhya Pradesh': { lat: 22.9734, lng: 78.6569 }, 'Maharashtra': { lat: 19.7515, lng: 75.7139 },
+  'Manipur': { lat: 24.6637, lng: 93.9063 }, 'Meghalaya': { lat: 25.467, lng: 91.3662 },
+  'Mizoram': { lat: 23.1645, lng: 92.9376 }, 'Nagaland': { lat: 26.1584, lng: 94.5624 },
+  'Odisha': { lat: 20.9517, lng: 85.0985 }, 'Punjab': { lat: 31.1471, lng: 75.3412 },
+  'Rajasthan': { lat: 27.0238, lng: 74.2179 }, 'Sikkim': { lat: 27.533, lng: 88.5122 },
+  'Tamil Nadu': { lat: 11.1271, lng: 78.6569 }, 'Telangana': { lat: 18.1124, lng: 79.0193 },
+  'Tripura': { lat: 23.9408, lng: 91.9882 }, 'Uttar Pradesh': { lat: 26.8467, lng: 80.9462 },
+  'Uttarakhand': { lat: 30.0668, lng: 79.0193 }, 'West Bengal': { lat: 22.9868, lng: 87.855 },
+  'Delhi': { lat: 28.7041, lng: 77.1025 },
+};
 
 export default function FieldCenter() {
   const [profile, setProfile] = useState(null);
@@ -16,6 +48,11 @@ export default function FieldCenter() {
   const [intelFile, setIntelFile] = useState(null);
   const [gpsCoords, setGpsCoords] = useState(null);
   const [capturingGps, setCapturingGps] = useState(false);
+
+  const mapRef = useRef(null);
+  const googleMapRef = useRef(null);
+  const markersRef = useRef([]);
+  const mapReadyRef = useRef(false);
 
   // 1. Find the logged-in volunteer's profile
   useEffect(() => {
@@ -62,6 +99,70 @@ export default function FieldCenter() {
       toast.error('Sync error: ' + err.message, { id: loadToast });
     }
   };
+
+  const initMap = useCallback(() => {
+    if (mapReadyRef.current || !mapRef.current || !window.google?.maps) return;
+    mapReadyRef.current = true;
+    const center = profile?.location?.state ? (STATE_CENTERS[profile.location.state] || { lat: 20, lng: 78 }) : { lat: 20, lng: 78 };
+    try {
+      googleMapRef.current = new window.google.maps.Map(mapRef.current, {
+        center, zoom: 8,
+        styles: MAP_STYLE, disableDefaultUI: true, backgroundColor: '#070c18',
+      });
+    } catch (err) {
+      console.error("FieldCenter: Map init failed:", err);
+      mapReadyRef.current = false;
+    }
+  }, [profile]);
+
+  useEffect(() => {
+    if (!MAPS_API_KEY) return;
+    let isMounted = true;
+    if (window.google?.maps) {
+      initMap();
+    } else {
+      const scriptId = 'google-maps-tactical-sdk';
+      if (!document.getElementById(scriptId)) {
+        const s = document.createElement('script');
+        s.id = scriptId;
+        s.src = `https://maps.googleapis.com/maps/api/js?key=${MAPS_API_KEY}&libraries=visualization`;
+        s.async = true;
+        s.onload = () => { if (isMounted) initMap(); };
+        document.head.appendChild(s);
+      } else {
+        const checker = setInterval(() => {
+          if (window.google?.maps) {
+            clearInterval(checker);
+            if (isMounted) initMap();
+          }
+        }, 100);
+      }
+    }
+    return () => { isMounted = false; };
+  }, [initMap]);
+
+  useEffect(() => {
+    if (!googleMapRef.current || !window.google?.maps?.Marker) return;
+    markersRef.current.forEach(m => m.setMap(null));
+    markersRef.current = [];
+    tasks.filter(t => t.status !== 'completed').forEach(task => {
+      if (!task.location?.lat || !task.location?.lng) return;
+      try {
+        const marker = new window.google.maps.Marker({
+          position: { lat: task.location.lat, lng: task.location.lng },
+          map: googleMapRef.current,
+          title: task.summary || '',
+          icon: {
+            path: 'M 0,-14 C -6,-14 -10,-8 -10,-3 C -10,6 0,14 0,14 C 0,14 10,6 10,-3 C 10,-8 6,-14 0,-14 Z',
+            fillColor: '#ffd166', fillOpacity: 0.9,
+            strokeColor: '#ffd166', strokeWeight: 1,
+            scale: 1, anchor: new window.google.maps.Point(0, 14),
+          }
+        });
+        markersRef.current.push(marker);
+      } catch (e) {}
+    });
+  }, [tasks]);
 
   // 3.5 Capture GPS
   const captureGps = () => {
@@ -169,6 +270,23 @@ export default function FieldCenter() {
           
           {/* LEFT: Assigned Missions (8 Columns) */}
           <div className="lg:col-span-12 xl:col-span-8 space-y-6">
+            
+            {/* Tactical Map Section */}
+            <div className="bg-[#0a0e19] border border-[#1e2535] relative overflow-hidden h-64 md:h-80 group shadow-2xl">
+               <div ref={mapRef} className="absolute inset-0" />
+               <div className="absolute inset-0 pointer-events-none" style={{ boxShadow: 'inset 0 0 40px rgba(0,0,0,0.6)' }}></div>
+               <div className="absolute top-4 left-4 z-10">
+                  <div className="bg-[#0f131e]/90 backdrop-blur-md border border-[#ffd166]/20 px-4 py-2 flex items-center gap-3">
+                     <span className="w-2 h-2 rounded-full bg-[#ffd166] animate-pulse"></span>
+                     <span className="font-label text-[8px] uppercase tracking-[0.3em] text-[#ffd166] font-bold">Operational Sector Map</span>
+                  </div>
+               </div>
+               <div className="absolute bottom-4 right-4 z-10 flex flex-col items-end">
+                  <p className="font-label text-[7px] text-white/20 uppercase tracking-widest mb-1">Assigned Support Zone</p>
+                  <p className="font-headline text-xs font-black text-white uppercase tracking-wider">{profile?.district}, {profile?.state}</p>
+               </div>
+            </div>
+
             <div className="flex justify-between items-end border-b border-white/5 pb-4">
                <div>
                   <p className="font-label text-[9px] uppercase tracking-widest text-white/20">Authorized Targets</p>
