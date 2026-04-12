@@ -38,6 +38,15 @@ const STATE_CENTERS = {
   'Delhi': { lat: 28.7041, lng: 77.1025 },
 };
 
+const DISTRICT_CENTERS = {
+  'Chittoor': { lat: 13.2172, lng: 79.1003 },
+  'Kadapa':   { lat: 14.4673, lng: 78.8242 },
+  'Tirupati': { lat: 13.6285, lng: 79.4192 },
+  'Nellore':  { lat: 14.4426, lng: 79.9865 },
+  'Kurnool':  { lat: 15.8281, lng: 78.0373 },
+  'Anantapur':{ lat: 14.6819, lng: 77.6006 },
+};
+
 export default function FieldCenter() {
   const [profile, setProfile] = useState(null);
   const [tasks, setTasks] = useState([]);
@@ -104,19 +113,35 @@ export default function FieldCenter() {
     if (mapReadyRef.current || !mapRef.current || !window.google?.maps) return;
     
     const userState = profile?.state || profile?.location?.state;
-    if (!userState) return;
+    const userDistrict = profile?.district || profile?.location?.area_name;
 
     mapReadyRef.current = true;
     
-    // Find state center with case-insensitivity
-    const stateKey = Object.keys(STATE_CENTERS).find(
-      k => k.toLowerCase() === userState.toLowerCase()
-    );
-    const center = stateKey ? STATE_CENTERS[stateKey] : { lat: 20, lng: 78 };
+    // Priority 1: District Center
+    let center = { lat: 20, lng: 78 };
+    let zoom = 10;
+
+    const districtKey = userDistrict ? Object.keys(DISTRICT_CENTERS).find(
+      k => k.toLowerCase() === userDistrict.toLowerCase()
+    ) : null;
+
+    if (districtKey) {
+      center = DISTRICT_CENTERS[districtKey];
+      zoom = 11;
+    } else if (userState) {
+        // Priority 2: State Center
+        const stateKey = Object.keys(STATE_CENTERS).find(
+          k => k.toLowerCase() === userState.toLowerCase()
+        );
+        if (stateKey) {
+          center = STATE_CENTERS[stateKey];
+          zoom = 8;
+        }
+    }
 
     try {
       googleMapRef.current = new window.google.maps.Map(mapRef.current, {
-        center, zoom: 8,
+        center, zoom,
         styles: MAP_STYLE, disableDefaultUI: true, backgroundColor: '#070c18',
       });
     } catch (err) {
