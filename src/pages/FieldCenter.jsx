@@ -102,8 +102,18 @@ export default function FieldCenter() {
 
   const initMap = useCallback(() => {
     if (mapReadyRef.current || !mapRef.current || !window.google?.maps) return;
+    
+    const userState = profile?.state || profile?.location?.state;
+    if (!userState) return;
+
     mapReadyRef.current = true;
-    const center = profile?.location?.state ? (STATE_CENTERS[profile.location.state] || { lat: 20, lng: 78 }) : { lat: 20, lng: 78 };
+    
+    // Find state center with case-insensitivity
+    const stateKey = Object.keys(STATE_CENTERS).find(
+      k => k.toLowerCase() === userState.toLowerCase()
+    );
+    const center = stateKey ? STATE_CENTERS[stateKey] : { lat: 20, lng: 78 };
+
     try {
       googleMapRef.current = new window.google.maps.Map(mapRef.current, {
         center, zoom: 8,
