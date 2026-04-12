@@ -335,156 +335,7 @@ export default function FieldCenter() {
                 <span className="font-label text-[10px] text-on-surface/40 uppercase tracking-widest">{tasks.length} Active Briefs</span>
             </div>
 
-            <div className="flex-1 overflow-y-auto pt-6 space-y-8" style={{ scrollbarWidth: 'none' }}>
-              {/* Emergency Uplink Section - Moved to Top for Visibility */}
-              <div id="uplink" className="relative overflow-hidden p-6 bg-primary/5 border border-primary/20 group scroll-mt-20">
-                <div className="mb-4">
-                   <h2 className="font-headline text-lg font-bold text-primary uppercase tracking-tighter">Emergency Signal Uplink</h2>
-                   <p className="font-label text-[9px] text-white/30 uppercase mt-1">Direct ARIA Intelligence Node</p>
-                </div>
-
-                <div className="flex items-center justify-between p-4 bg-black/40 border border-[#1e2535] rounded-sm mb-4">
-                   <div className="flex items-center gap-3">
-                      <span className={`material-symbols-outlined text-sm ${gpsCoords ? 'text-primary animate-pulse' : 'text-white/10'}`}>
-                         {gpsCoords ? 'location_searching' : 'location_disabled'}
-                      </span>
-                      <p className="font-mono text-[9px] text-primary">
-                         {gpsCoords ? `${gpsCoords.lat.toFixed(4)}, ${gpsCoords.lng.toFixed(4)}` : 'SIGNAL OFFLINE'}
-                      </p>
-                   </div>
-                   <button onClick={captureGps} disabled={capturingGps} className={`px-3 py-1.5 font-label text-[8px] uppercase tracking-widest font-black transition-all border ${gpsCoords ? 'border-[#ffd166] text-primary bg-[#ffd166]/10' : 'border-white/10 text-on-surface/40 hover:border-[#ffd166] hover:text-primary'}`}>
-                      {capturingGps ? 'Locking...' : gpsCoords ? 'Recalibrate' : 'Share GPS'}
-                   </button>
-                </div>
-
-                <div className="relative mb-4">
-                  <textarea
-                    value={intelContent}
-                    onChange={e => setIntelContent(e.target.value)}
-                    placeholder="> AWAITING TEXTURAL INTEL..."
-                    className="w-full bg-black/80 shadow-inner border border-[#1e2535] p-5 text-xs font-mono text-primary min-h-[140px] focus:border-[#ffd166]/50 outline-none transition-all placeholder:text-primary/20 resize-none"
-                  />
-                  
-                  {/* Tactical Controls Overlay */}
-                  <div className="absolute top-3 right-3 flex flex-col gap-2">
-                    <button 
-                      type="button"
-                      onClick={async () => {
-                        if (!isRecording) {
-                          try {
-                            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                            const mediaRecorder = new MediaRecorder(stream);
-                            mediaRecorderRef.current = mediaRecorder;
-                            audioChunksRef.current = [];
-
-                            mediaRecorder.ondataavailable = (event) => {
-                              if (event.data.size > 0) audioChunksRef.current.push(event.data);
-                            };
-
-                            mediaRecorder.onstop = async () => {
-                              const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
-                              const formData = new FormData();
-                              formData.append('file', audioBlob, 'intel.wav');
-                              formData.append('model', 'saaras:v3');
-                              
-                              // Mapping our app codes to Sarvam BCP-47
-                              const langMap = {
-                                hi: 'hi-IN', te: 'te-IN', tm: 'ta-IN', ml: 'ml-IN', 
-                                mr: 'mr-IN', bn: 'bn-IN', gu: 'gu-IN', kn: 'kn-IN', 
-                                pa: 'pa-IN', en: 'en-IN'
-                              };
-                              formData.append('language_code', langMap[lang] || 'en-IN');
-
-                              const loadToast = toast.loading('ARIA — Processing Sarvam Neural Link...');
-                              try {
-                                const response = await fetch('https://api.sarvam.ai/speech-to-text', {
-                                  method: 'POST',
-                                  headers: {
-                                    'api-subscription-key': 'sk_39c5ri93_We8aEsffU6hHfWNnCRy9Hm2F'
-                                  },
-                                  body: formData
-                                });
-                                const data = await response.json();
-                                if (data.transcript) {
-                                  setIntelContent(prev => prev + (prev ? ' ' : '') + data.transcript);
-                                  toast.success('Sarvam Intelligence Ingested', { id: loadToast });
-                                } else {
-                                  throw new Error('Transcription Null');
-                                }
-                              } catch (err) {
-                                toast.error('Sarvam Link Error: ' + err.message, { id: loadToast });
-                              }
-                            };
-
-                            mediaRecorder.start();
-                            setIsRecording(true);
-                            toast('Sarvam Neural Link Active', { icon: '🤖' });
-                          } catch (err) {
-                            toast.error('Tactical Audio Error: ' + err.message);
-                          }
-                        } else {
-                          if (mediaRecorderRef.current) {
-                            mediaRecorderRef.current.stop();
-                            mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
-                          }
-                          setIsRecording(false);
-                        }
-                      }}
-                      className={`w-8 h-8 rounded-full bg-black/40 border transition-all flex items-center justify-center ${isRecording ? 'border-red-500 text-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]' : 'border-white/10 text-white/40 hover:text-primary hover:border-primary'}`}
-                      title={isRecording ? "Stop Capture" : "Initiate Voice Intel Capture"}
-                    >
-                      <span className={`material-symbols-outlined text-sm ${isRecording ? 'animate-pulse' : ''}`}>mic</span>
-                    </button>
-                    
-                    <label className="w-8 h-8 rounded-full bg-black/40 border border-white/10 flex items-center justify-center text-white/40 hover:text-primary hover:border-primary transition-all cursor-pointer">
-                      <span className="material-symbols-outlined text-sm">image</span>
-                      <input 
-                        type="file" 
-                        accept="image/*" 
-                        className="hidden" 
-                        onChange={(e) => {
-                          const file = e.target.files[0];
-                          if (file) {
-                            setIntelFile(file);
-                            toast.success(`Visual Payload Attached: ${file.name}`, { icon: '📷' });
-                          }
-                        }}
-                      />
-                    </label>
-                  </div>
-                </div>
-
-                {isRecording && (
-                   <div className="mb-4 px-4 py-2 bg-red-500/10 border border-red-500/30 flex items-center gap-3">
-                      <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
-                      <span className="font-label text-[8px] text-red-500 uppercase tracking-widest font-black">Recording Tactical Audio Stream...</span>
-                   </div>
-                )}
-
-                {intelFile && (
-                  <div className="mb-4 px-4 py-2 bg-primary/10 border border-primary/20 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-xs text-primary">attach_file</span>
-                      <span className="font-label text-[8px] text-primary uppercase tracking-widest truncate max-w-[200px]">{intelFile.name}</span>
-                    </div>
-                    <button onClick={() => setIntelFile(null)} className="text-primary hover:scale-110">
-                      <span className="material-symbols-outlined text-xs">close</span>
-                    </button>
-                  </div>
-                )}
-
-                <button 
-                  onClick={handleTransmitSignal}
-                  disabled={reporting}
-                  className="w-full py-4 bg-primary text-background font-label font-black text-[10px] uppercase tracking-[0.4em] hover:tracking-[0.5em] transition-all flex items-center justify-center gap-3 group"
-                >
-                  {reporting ? 'UPLINKING...' : 'TRANSMIT TACTICAL SIGNAL'}
-                  <span className="material-symbols-outlined text-sm transition-transform group-hover:translate-x-1">bolt</span>
-                </button>
-              </div>
-
-              {/* Your Missions Section - Now follows the Uplink */}
-              <div className="space-y-4">
+             <div className="flex-1 overflow-y-auto pt-6 space-y-4" style={{ scrollbarWidth: 'none' }}>
                 <div className="flex justify-between items-end border-b border-white/5 pb-2">
                   <div>
                     <p className="font-label text-[9px] uppercase tracking-widest text-white/20">Authorized Targets</p>
@@ -519,18 +370,37 @@ export default function FieldCenter() {
                           </div>
                        </div>
                        <p className="font-body text-[9px] text-white/60 mb-2 truncate">"{task.summary}"</p>
-                       <button 
-                         onClick={() => updateTaskStatus(task.id, 'in_progress')}
-                         className="w-full py-1.5 border border-primary/20 text-primary font-label text-[7px] uppercase font-black tracking-widest hover:bg-primary/5 transition-all"
-                       >
-                          Open Brief
-                       </button>
+                       
+                       <div className="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-white/5">
+                        {task.status === 'in_progress' ? (
+                          <label className="col-span-2 cursor-pointer">
+                            <div className="w-full py-2 bg-green-500 text-white font-label text-[8px] uppercase font-black tracking-[0.2em] hover:bg-green-600 transition-all text-center">
+                               Visual Verification Required
+                            </div>
+                            <input 
+                              type="file" 
+                              className="hidden" 
+                              accept="image/*"
+                              onChange={(e) => {
+                                setVerifyingTaskId(task.id);
+                                handleVerification(e);
+                              }}
+                            />
+                          </label>
+                        ) : (
+                          <button 
+                            onClick={() => updateTaskStatus(task.id, 'in_progress')}
+                            className="col-span-2 py-2 border border-primary text-primary font-label text-[8px] uppercase font-black tracking-[0.2em] hover:bg-primary/5 transition-all"
+                          >
+                             En Route / Initiating Signal
+                          </button>
+                        )}
+                      </div>
                      </div>
                    </div>
                   )
                 })}
-              </div>
-            </div>
+             </div>
            </div>
         </section>
       </main>

@@ -9,6 +9,7 @@ import NationalMonitoring from './pages/NationalMonitoring.jsx';
 import Upload from './pages/Upload.jsx';
 import Volunteers from './pages/Volunteers.jsx';
 import FieldCenter from './pages/FieldCenter.jsx';
+import RaiseIssue from './pages/RaiseIssue.jsx';
 import AIChat from './components/AIChat.jsx';
 import SecureComms from './pages/SecureComms.jsx';
 import StateAdminDashboard from './pages/StateAdminDashboard.jsx';
@@ -100,6 +101,7 @@ export default function App() {
           <Route path="/dashboard/state"    element={<ProtectedRoute requiredRole="state_admin"><StateAdminDashboard /></ProtectedRoute>} />
           <Route path="/dashboard/state/volunteers" element={<ProtectedRoute requiredRole="state_admin"><StateAdminVolunteers /></ProtectedRoute>} />
           <Route path="/dashboard/volunteer" element={<ProtectedRoute requiredRole="volunteer"><FieldCenter /></ProtectedRoute>} />
+          <Route path="/dashboard/volunteer/report" element={<ProtectedRoute requiredRole="volunteer"><RaiseIssue /></ProtectedRoute>} />
           <Route path="/dashboard/comms" element={<ProtectedRoute><SecureComms /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><ProfileSettings /></ProtectedRoute>} />
 
