@@ -144,17 +144,25 @@ export default function FieldCenter() {
   };
 
   const initMap = useCallback(() => {
-    if (mapReadyRef.current || !mapRef.current || !window.google?.maps) return;
-    mapReadyRef.current = true;
+    if (!mapRef.current || !window.google?.maps) return;
+    if (googleMapRef.current) return;
+    
     try {
       const center = DISTRICT_CENTERS[profile?.district] || STATE_CENTERS[profile?.location?.state] || { lat: 20, lng: 78 };
-      const zoom = profile?.district ? 12 : 7;
       googleMapRef.current = new window.google.maps.Map(mapRef.current, {
-        center, zoom, styles: MAP_STYLE, disableDefaultUI: true, backgroundColor: '#060b14',
+        center, zoom: 12, styles: MAP_STYLE, disableDefaultUI: true,
       });
+      mapReadyRef.current = true;
     } catch (err) {
-      console.error("FieldCenter: Map init failed:", err);
-      mapReadyRef.current = false;
+      console.error("Map init error:", err);
+    }
+  }, [profile]);
+
+  useEffect(() => {
+    if (googleMapRef.current && profile) {
+      const center = DISTRICT_CENTERS[profile?.district] || STATE_CENTERS[profile?.location?.state] || { lat: 20, lng: 78 };
+      googleMapRef.current.setCenter(center);
+      googleMapRef.current.setZoom(12);
     }
   }, [profile]);
 
