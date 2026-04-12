@@ -4,6 +4,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'fire
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../firebase.js';
 import toast from 'react-hot-toast';
+import { useLanguage } from '../utils/i18n.jsx';
 
 const INDIAN_STATES = [
   'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 
@@ -16,6 +17,8 @@ const INDIAN_STATES = [
 ];
 
 export default function Login() {
+  const navigate = useNavigate();
+  const { lang, setLang, t } = useLanguage();
   const [role, setRole] = useState('state_admin');
   const [email, setEmail] = useState('admin@grandline.ai');
   const [password, setPassword] = useState('Password@123');
@@ -37,7 +40,6 @@ export default function Login() {
 
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -138,11 +140,29 @@ export default function Login() {
                 <span className="font-label text-[9px] uppercase tracking-[0.3em] text-white/20 block mb-1">Access Protocol v4.1</span>
                 <h2 className="font-headline text-xl font-bold text-on-surface uppercase tracking-tight">System Login</h2>
               </div>
-              <div className="text-right">
-                <span className="font-label text-[9px] uppercase text-secondary/40 block mb-1">Neural Sync</span>
+              <div className="flex flex-col items-end">
+                <div className="flex items-center gap-2 mb-1">
+                   <span className="material-symbols-outlined text-[10px] text-primary/40">translate</span>
+                   <select 
+                     value={lang} 
+                     onChange={(e) => setLang(e.target.value)}
+                     className="bg-transparent text-[#ffd166]/60 font-label text-[8px] uppercase tracking-widest outline-none border-none cursor-pointer hover:text-[#ffd166] transition-colors"
+                   >
+                     <option value="en" className="bg-[#0f131e]">EN</option>
+                     <option value="hi" className="bg-[#0f131e]">HI</option>
+                     <option value="te" className="bg-[#0f131e]">TE</option>
+                     <option value="tm" className="bg-[#0f131e]">TM</option>
+                     <option value="ml" className="bg-[#0f131e]">ML</option>
+                     <option value="mr" className="bg-[#0f131e]">MR</option>
+                     <option value="bn" className="bg-[#0f131e]">BN</option>
+                     <option value="gu" className="bg-[#0f131e]">GU</option>
+                     <option value="kn" className="bg-[#0f131e]">KN</option>
+                     <option value="pa" className="bg-[#0f131e]">PA</option>
+                   </select>
+                </div>
                 <div className="flex items-center gap-2 text-secondary">
                   <span className="w-1.5 h-1.5 bg-secondary rounded-full animate-pulse shadow-[0_0_8px_#ffd166]"></span>
-                  <span className="text-[10px] font-bold font-label tracking-widest">READY</span>
+                  <span className="text-[10px] font-bold font-label tracking-widest uppercase">READY</span>
                 </div>
               </div>
             </div>

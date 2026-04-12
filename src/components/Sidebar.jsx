@@ -103,11 +103,16 @@ export default function Sidebar() {
              onChange={(e) => setLang(e.target.value)}
              className="bg-transparent text-on-surface/40 font-label text-[8px] uppercase tracking-widest outline-none border-none flex-1 cursor-pointer hover:text-primary transition-colors"
            >
-             <option value="en" className="bg-surface">English</option>
-             <option value="hi" className="bg-surface">हिन्दी</option>
-             <option value="te" className="bg-surface">తెలుగు</option>
-             <option value="tm" className="bg-surface">தமிழ்</option>
-             <option value="ml" className="bg-surface">മലയാളം</option>
+             <option value="en" className="bg-surface">English (International)</option>
+             <option value="hi" className="bg-surface">हिन्दी (Hindi)</option>
+             <option value="te" className="bg-surface">తెలుగు (Telugu)</option>
+             <option value="tm" className="bg-surface">தமிழ் (Tamil)</option>
+             <option value="ml" className="bg-surface">മലയാളം (Malayalam)</option>
+             <option value="mr" className="bg-surface">मराठी (Marathi)</option>
+             <option value="bn" className="bg-surface">বাংলা (Bengali)</option>
+             <option value="gu" className="bg-surface">ગુજરાતી (Gujarati)</option>
+             <option value="kn" className="bg-surface">ಕನ್ನಡ (Kannada)</option>
+             <option value="pa" className="bg-surface">ਪੰਜਾਬੀ (Punjabi)</option>
            </select>
         </div>
 
