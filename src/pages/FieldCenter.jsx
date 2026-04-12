@@ -337,7 +337,7 @@ export default function FieldCenter() {
 
             <div className="flex-1 overflow-y-auto pt-6 space-y-8" style={{ scrollbarWidth: 'none' }}>
               {/* Emergency Uplink Section - Moved to Top for Visibility */}
-              <div className="relative overflow-hidden p-6 bg-primary/5 border border-primary/20 group">
+              <div id="uplink" className="relative overflow-hidden p-6 bg-primary/5 border border-primary/20 group scroll-mt-20">
                 <div className="mb-4">
                    <h2 className="font-headline text-lg font-bold text-primary uppercase tracking-tighter">Emergency Signal Uplink</h2>
                    <p className="font-label text-[9px] text-white/30 uppercase mt-1">Direct ARIA Intelligence Node</p>

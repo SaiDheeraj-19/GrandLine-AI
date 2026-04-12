@@ -86,7 +86,7 @@ export default function Sidebar() {
         )}
 
         {(role === 'volunteer' || role === 'user' || !role) && (
-          <Item to="/dashboard/volunteer" icon="diversity_3" label="sidebar_command_deck" />
+          <Item to="/dashboard/volunteer#uplink" icon="report_problem" label="Raise Problem" />
         )}
 
         <Item to="/dashboard/comms" icon="cell_tower" label="sidebar_comms" />
