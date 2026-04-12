@@ -16,19 +16,7 @@
   --accent-glow: rgba(255, 209, 102, 0.15);
 }
 
-html[data-theme='light'] {
-  /* LIGHT MODE (Operational Clarity - High Contrast) */
-  --bg-color: #f8fafc;
-  --surface-color: #ffffff;
-  --surface-glass: rgba(255, 255, 255, 0.9);
-  --on-surface: #0f172a;
-  --primary: #0284c7;
-  --on-primary: #ffffff;
-  --border-color: rgba(15, 23, 42, 0.1);
-  --sidebar-bg: #f1f5f9;
-  --text-dim: #64748b;
-  --accent-glow: rgba(2, 132, 199, 0.1);
-}
+
 
 @layer base {
   body {

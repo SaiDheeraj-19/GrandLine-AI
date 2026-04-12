@@ -5,7 +5,6 @@ import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../firebase.js';
 import toast from 'react-hot-toast';
 import { useLanguage } from '../utils/i18n.jsx';
-import ThemeToggle from './ThemeToggle.jsx';
 
 export default function Sidebar() {
   const navigate = useNavigate();
@@ -126,7 +125,6 @@ export default function Sidebar() {
           </button>
         )}
 
-        <ThemeToggle />
 
         <button 
           onClick={() => navigate('/settings')}
