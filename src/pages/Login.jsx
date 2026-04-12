@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { signInWithEmailAndPassword, signInAnonymously, createUserWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../firebase.js';
 import toast from 'react-hot-toast';
@@ -95,29 +95,6 @@ export default function Login() {
     }
   };
 
-  const guestAccess = async () => {
-    try {
-      const userCred = await signInAnonymously(auth);
-      
-      // Sync guest profile
-      await setDoc(doc(db, 'users', userCred.user.uid), {
-        email: 'guest@grandline.ai',
-        role: 'super_admin',
-        state: 'All',
-        isGuest: true,
-        lastLogin: serverTimestamp()
-      });
-
-      localStorage.setItem('grandline_role', 'super_admin');
-      localStorage.setItem('grandline_state', 'All');
-      localStorage.setItem('grandline_uid', userCred.user.uid);
-      toast.success('Bypassing Security. Entering as Global Observer.');
-      navigate('/dashboard/national');
-    } catch (err) {
-      toast.error('Guest Protocol Failed.');
-      console.error(err);
-    }
-  };
 
   return (
     <div className="bg-surface text-on-surface font-body min-h-screen flex items-center justify-center p-6 selection:bg-primary-container selection:text-on-primary-container relative overflow-hidden dot-grid">
@@ -277,18 +254,6 @@ export default function Login() {
                 {loading ? 'INITIALIZING LINK...' : 'ENTER COMMAND CENTER'}
               </button>
 
-              <div className="relative py-2 flex items-center justify-center">
-                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/5"></div></div>
-                <span className="relative bg-transparent px-4 font-label text-[8px] text-white/20 tracking-[0.5em] uppercase">OR</span>
-              </div>
-
-              <button 
-                type="button"
-                onClick={guestAccess}
-                className="w-full bg-white/5 border border-white/10 text-white/40 font-label text-[9px] py-4 uppercase tracking-[0.2em] hover:bg-white/10 transition-all font-bold"
-              >
-                Enter as Guest Observer
-              </button>
             </form>
 
             {/* Footer */}

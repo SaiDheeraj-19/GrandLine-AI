@@ -310,7 +310,7 @@ export default function NationalMonitoring() {
       } catch (err) {
         console.warn("Polyline creation failed:", err);
       }
-    }
+    });
   }, [issues, assistanceRequests, volunteers, mapMode]);
 
   // ── Command Actions ─────────────────────────────────────────────────────

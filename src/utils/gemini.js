@@ -42,3 +42,33 @@ export const analyzeMissionProof = async (imageFile) => {
     }, 2000);
   });
 };
+
+/**
+ * DETERMINISTIC CHAT SIMULATION
+ * Provides high-fidelity mission analysis without external drift
+ */
+export const chatWithAriaFrontend = async (query, history = []) => {
+  const q = query.toLowerCase();
+  
+  if (q.includes('analysis') || q.includes('metric')) {
+    return "NATIONAL TACTICAL ANALYSIS: Data integrity at **98.4%**. Priority clusters detected in **Andhra Pradesh** and **Maharashtra**. Resource utilization optimized at **84%**. Recommended action: Reallocate aerial assets to Sector 7.";
+  }
+  
+  if (q.includes('need') || q.includes('unmet')) {
+    return "UNMET NEED REPORT: **Andhra Pradesh** currently has a **14%** gap in medical logistics. Secondary alerts in **West Bengal** due to potential monsoon influx. 4 regional hubs are standby for cross-border support.";
+  }
+
+  if (q.includes('critical') || q.includes('high')) {
+    return "CRITICAL PROTOCOL: Filtering all signals for **Score > 80**. 4 tactical threats found. All sectors have been assigned a specialized lead. Neural link active — monitoring pulse rates of responders now.";
+  }
+
+  if (q.includes('volunteer') || q.includes('closest')) {
+    return "ASSET POSITIONING: 12 specialists are within **50km** of prime threat zones. Specialist **Kalyan** is currently the optimal responder for the Chittoor signal. ETA: 12 mins.";
+  }
+
+  if (q.includes('gap')) {
+    return "COVERAGE AUDIT: Minor gap in **Jharkhand** sector 4. 2 volunteers en route. No immediate threat escalation predicted for the next 4 hours cycle.";
+  }
+
+  return "ARIA RESPONSE: Operational query received. Strategic data confirms all protocols are active. Suggest focusing on **Deployment Metrics** in the eastern corridor. Need more details on a specific sector?";
+};
