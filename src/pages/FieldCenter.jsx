@@ -111,42 +111,44 @@ export default function FieldCenter() {
 
   const initMap = useCallback(() => {
     if (mapReadyRef.current || !mapRef.current || !window.google?.maps) return;
-    
-    const userState = profile?.state || profile?.location?.state;
-    const userDistrict = profile?.district || profile?.location?.area_name;
-
     mapReadyRef.current = true;
-    
-    // Priority 1: District Center
-    let center = { lat: 20, lng: 78 };
-    let zoom = 10;
-
-    const districtKey = userDistrict ? Object.keys(DISTRICT_CENTERS).find(
-      k => k.toLowerCase() === userDistrict.toLowerCase()
-    ) : null;
-
-    if (districtKey) {
-      center = DISTRICT_CENTERS[districtKey];
-      zoom = 11;
-    } else if (userState) {
-        // Priority 2: State Center
-        const stateKey = Object.keys(STATE_CENTERS).find(
-          k => k.toLowerCase() === userState.toLowerCase()
-        );
-        if (stateKey) {
-          center = STATE_CENTERS[stateKey];
-          zoom = 8;
-        }
-    }
-
     try {
       googleMapRef.current = new window.google.maps.Map(mapRef.current, {
-        center, zoom,
+        center: { lat: 20, lng: 78 }, zoom: 5,
         styles: MAP_STYLE, disableDefaultUI: true, backgroundColor: '#070c18',
       });
     } catch (err) {
       console.error("FieldCenter: Map init failed:", err);
       mapReadyRef.current = false;
+    }
+  }, []);
+
+  // Tactical Centering Effect
+  useEffect(() => {
+    if (!googleMapRef.current || !profile) return;
+
+    const userState = (profile?.state || profile?.location?.state || '').trim();
+    const userDistrict = (profile?.district || profile?.location?.area_name || '').trim();
+
+    if (!userState && !userDistrict) return;
+
+    // Priority 1: District Center
+    const districtKey = userDistrict ? Object.keys(DISTRICT_CENTERS).find(
+      k => k.trim().toLowerCase() === userDistrict.toLowerCase()
+    ) : null;
+
+    if (districtKey) {
+      googleMapRef.current.setCenter(DISTRICT_CENTERS[districtKey]);
+      googleMapRef.current.setZoom(11);
+    } else if (userState) {
+      // Priority 2: State Center
+      const stateKey = Object.keys(STATE_CENTERS).find(
+        k => k.trim().toLowerCase() === userState.toLowerCase()
+      );
+      if (stateKey) {
+        googleMapRef.current.setCenter(STATE_CENTERS[stateKey]);
+        googleMapRef.current.setZoom(8);
+      }
     }
   }, [profile]);
 
