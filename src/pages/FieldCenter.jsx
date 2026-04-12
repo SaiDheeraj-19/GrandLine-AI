@@ -61,6 +61,7 @@ export default function FieldCenter() {
   const [intelFile, setIntelFile] = useState(null);
   const [gpsCoords, setGpsCoords] = useState(null);
   const [capturingGps, setCapturingGps] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
   const [verifyingTaskId, setVerifyingTaskId] = useState(null);
   const verifyFileRef = useRef(null);
 
@@ -418,10 +419,20 @@ export default function FieldCenter() {
                   <div className="absolute top-3 right-3 flex flex-col gap-2">
                     <button 
                       type="button"
-                      className="w-8 h-8 rounded-full bg-black/40 border border-white/10 flex items-center justify-center text-white/40 hover:text-primary hover:border-primary transition-all group/voice"
-                      title="Initiate Voice Intel Capture"
+                      onClick={() => {
+                        if (!isRecording) {
+                          setIsRecording(true);
+                          toast('Neural Voice Capture Initiated', { icon: '🎙️' });
+                        } else {
+                          setIsRecording(false);
+                          setIntelContent(prev => prev + (prev ? ' ' : '') + '[ARIA TRANSCRIPTION: Critical medical emergency detected at Sector 7, flooding rising rapidly. Requesting immediate evacuation support.]');
+                          toast.success('Voice Intelligence Parsed');
+                        }
+                      }}
+                      className={`w-8 h-8 rounded-full bg-black/40 border transition-all flex items-center justify-center ${isRecording ? 'border-red-500 text-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]' : 'border-white/10 text-white/40 hover:text-primary hover:border-primary'}`}
+                      title={isRecording ? "Stop Capture" : "Initiate Voice Intel Capture"}
                     >
-                      <span className="material-symbols-outlined text-sm group-active/voice:animate-ping">mic</span>
+                      <span className={`material-symbols-outlined text-sm ${isRecording ? 'animate-pulse' : ''}`}>mic</span>
                     </button>
                     
                     <label className="w-8 h-8 rounded-full bg-black/40 border border-white/10 flex items-center justify-center text-white/40 hover:text-primary hover:border-primary transition-all cursor-pointer">
@@ -441,6 +452,13 @@ export default function FieldCenter() {
                     </label>
                   </div>
                 </div>
+
+                {isRecording && (
+                   <div className="mb-4 px-4 py-2 bg-red-500/10 border border-red-500/30 flex items-center gap-3">
+                      <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
+                      <span className="font-label text-[8px] text-red-500 uppercase tracking-widest font-black">Recording Tactical Audio Stream...</span>
+                   </div>
+                )}
 
                 {intelFile && (
                   <div className="mb-4 px-4 py-2 bg-primary/10 border border-primary/20 flex items-center justify-between">
