@@ -50,7 +50,7 @@ const DISTRICT_CENTERS = {
 };
 
 export default function FieldCenter() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [profile, setProfile] = useState(null);
   const [tasks, setTasks] = useState([]);
   const [volunteers, setVols] = useState([]);
@@ -420,13 +420,40 @@ export default function FieldCenter() {
                     <button 
                       type="button"
                       onClick={() => {
+                        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                        const recognition = SpeechRecognition ? new SpeechRecognition() : null;
+
                         if (!isRecording) {
+                          if (!recognition) {
+                             toast.error('Voice Protocol Not Supported in this Node');
+                             return;
+                          }
                           setIsRecording(true);
+                          recognition.continuous = true;
+                          recognition.interimResults = true;
+                          recognition.lang = lang === 'hi' ? 'hi-IN' : lang === 'te' ? 'te-IN' : 'en-IN'; // Link to active dialect
+                          
+                          recognition.onresult = (event) => {
+                             const transcript = Array.from(event.results)
+                               .map(result => result[0])
+                               .map(result => result.transcript)
+                               .join('');
+                             setIntelContent(transcript);
+                          };
+
+                          recognition.onend = () => {
+                             setIsRecording(false);
+                          };
+
+                          recognition.start();
+                          window._activeRecognition = recognition;
                           toast('Neural Voice Capture Initiated', { icon: '🎙️' });
                         } else {
+                          if (window._activeRecognition) {
+                            window._activeRecognition.stop();
+                          }
                           setIsRecording(false);
-                          setIntelContent(prev => prev + (prev ? ' ' : '') + '[ARIA TRANSCRIPTION: Critical medical emergency detected at Sector 7, flooding rising rapidly. Requesting immediate evacuation support.]');
-                          toast.success('Voice Intelligence Parsed');
+                          toast.success('Voice Intelligence Synchronized');
                         }
                       }}
                       className={`w-8 h-8 rounded-full bg-black/40 border transition-all flex items-center justify-center ${isRecording ? 'border-red-500 text-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]' : 'border-white/10 text-white/40 hover:text-primary hover:border-primary'}`}
