@@ -80,10 +80,10 @@ function SkillDot({ skill }) {
 
 function SectionHeader({ icon, title, count, action }) {
   return (
-    <div className="flex-shrink-0 flex items-center justify-between px-5 py-4 border-b border-white/5">
+    <div className="flex-shrink-0 flex items-center justify-between px-5 py-4 border-b border-on-surface/5">
       <div className="flex items-center gap-2">
-        <span className={`material-symbols-outlined text-sm ${action ? 'text-[#ffd166]' : 'text-white/40'}`}>{icon}</span>
-        <span className="font-label text-[9px] uppercase tracking-widest font-black text-white/70">{title}</span>
+        <span className={`material-symbols-outlined text-sm ${action ? 'text-primary' : 'text-white/40'}`}>{icon}</span>
+        <span className="font-label text-[9px] uppercase tracking-widest font-black text-on-surface/70">{title}</span>
         {count !== undefined && (
           <span className="font-headline text-[9px] font-black text-[#ffd166] bg-[#ffd166]/10 px-1.5 py-0.5">{count}</span>
         )}
@@ -542,28 +542,29 @@ export default function StateAdminDashboard() {
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="bg-[#070c18] text-white font-body h-screen overflow-hidden flex relative">
+    <div className="bg-background text-on-surface font-body h-screen overflow-hidden flex relative">
       <Sidebar />
+      <BroadcastReceiver />
 
       <main className="flex-1 ml-20 md:ml-64 h-screen flex flex-col overflow-hidden">
 
         {/* ── HEADER ──────────────────────────────────────────────────────── */}
-        <header className="flex-shrink-0 flex items-center justify-between px-6 h-16 bg-[#070c18]/95 backdrop-blur border-b border-white/[0.06] z-50 relative">
+        <header className="flex-shrink-0 flex items-center justify-between px-6 h-16 bg-background/95 backdrop-blur border-b border-on-surface/10 z-50 relative">
           <div className="scan-line top-0 opacity-10" />
 
           <div className="flex items-center gap-5">
             <div>
-              <span className="font-label text-[7px] uppercase tracking-[0.5em] text-[#ffd166]/50 block">Sector Command Bridge</span>
-              <h1 className="font-headline text-base font-black text-white tracking-tight uppercase leading-tight">
+              <span className="font-label text-[7px] uppercase tracking-[0.5em] text-primary/50 block">Sector Command Bridge</span>
+              <h1 className="font-headline text-base font-black text-on-surface tracking-tight uppercase leading-tight">
                 {userState} — State Operations
               </h1>
             </div>
             {/* View mode toggle */}
-            <div className="hidden md:flex items-center bg-white/[0.04] rounded-sm border border-white/[0.06] overflow-hidden">
+            <div className="hidden md:flex items-center bg-on-surface/5 rounded-sm border border-on-surface/10 overflow-hidden">
               {[['state','location_on','Sector View'],['national','public','National View']].map(([v,icon,label]) => (
                 <button key={v} type="button" onClick={() => setViewMode(v)}
                   className={`flex items-center gap-1.5 px-3 py-2 text-[8px] font-label font-black uppercase tracking-widest transition-all
-                    ${viewMode === v ? 'bg-[#ffd166] text-[#0f131e]' : 'text-white/30 hover:text-white'}`}>
+                    ${viewMode === v ? 'bg-primary text-on-primary' : 'text-on-surface/30 hover:text-on-surface'}`}>
                   <span className="material-symbols-outlined text-xs">{icon}</span>
                   {label}
                 </button>

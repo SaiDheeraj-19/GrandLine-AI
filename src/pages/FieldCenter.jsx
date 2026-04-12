@@ -325,14 +325,14 @@ export default function FieldCenter() {
   };
 
   return (
-    <div className="bg-background text-on-background font-body min-h-screen dot-grid relative">
+    <div className="bg-background text-on-surface font-body min-h-screen dot-grid relative">
       <Sidebar />
 
       <main className="ml-20 md:ml-64 flex-1 flex flex-col min-w-0">
-        <header className="flex justify-between items-center w-full px-6 h-16 bg-[#0f131e]/90 backdrop-blur-xl border-b border-white/5 z-20">
+        <header className="flex justify-between items-center w-full px-6 h-16 bg-background/90 backdrop-blur-xl border-b border-on-surface/5 z-20">
           <div className="flex items-center gap-4">
              <div className="w-2 h-2 rounded-full bg-primary-container animate-pulse shadow-[0_0_8px_#ffd166]"></div>
-             <h1 className="font-headline text-lg tracking-[0.3em] uppercase font-bold text-[#ffd166]">Field Operations Deck</h1>
+             <h1 className="font-headline text-lg tracking-[0.3em] uppercase font-bold text-primary">Field Operations Deck</h1>
           </div>
           
           <div className="flex items-center gap-6">
@@ -340,7 +340,7 @@ export default function FieldCenter() {
             <div className="h-8 w-px bg-white/5"></div>
             {profile && (
               <div className="flex items-center gap-3">
-                <span className="font-label text-[9px] text-white/40 uppercase tracking-widest hidden sm:block">Specialist: {profile.name}</span>
+                <span className="font-label text-[9px] text-on-surface/40 uppercase tracking-widest hidden sm:block">Specialist: {profile.name}</span>
                 <div className="h-8 w-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
                    <span className="material-symbols-outlined text-sm text-primary-container">person</span>
                 </div>
@@ -361,7 +361,7 @@ export default function FieldCenter() {
                <div className="absolute top-4 left-4 z-10">
                   <div className="bg-[#0f131e]/90 backdrop-blur-md border border-[#ffd166]/20 px-4 py-2 flex items-center gap-3">
                      <span className="w-2 h-2 rounded-full bg-[#ffd166] animate-pulse"></span>
-                     <span className="font-label text-[8px] uppercase tracking-[0.3em] text-[#ffd166] font-bold">Operational Sector Map</span>
+                     <span className="font-label text-[8px] uppercase tracking-[0.3em] text-primary font-bold">Operational Sector Map</span>
                   </div>
                </div>
                <div className="absolute bottom-4 right-4 z-10 flex flex-col items-end">
@@ -373,9 +373,9 @@ export default function FieldCenter() {
             <div className="flex justify-between items-end border-b border-white/5 pb-4">
                <div>
                   <p className="font-label text-[9px] uppercase tracking-widest text-white/20">Authorized Targets</p>
-                  <h2 className="font-headline text-2xl font-bold uppercase tracking-tight text-[#ffd166]">Your Missions</h2>
+                  <h2 className="font-headline text-2xl font-bold uppercase tracking-tight text-primary">Your Missions</h2>
                </div>
-                <span className="font-label text-[10px] text-white/40 uppercase tracking-widest">{tasks.filter(t => t.status !== 'completed').length} Active Briefs</span>
+                <span className="font-label text-[10px] text-on-surface/40 uppercase tracking-widest">{tasks.filter(t => t.status !== 'completed').length} Active Briefs</span>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -384,7 +384,7 @@ export default function FieldCenter() {
                ) : tasks.filter(t => t.status !== 'completed').length === 0 ? (
                  <div className="col-span-2 h-64 bg-[#0a0e19] shadow-[inset_0_0_20px_rgba(255,255,255,0.02)] border border-dashed border-[#1e2535] flex flex-col items-center justify-center gap-4 opacity-50">
                     <span className="material-symbols-outlined text-5xl text-white/20">radar</span>
-                    <p className="font-label text-xs uppercase tracking-widest text-white/40">Awaiting Command Authorization...</p>
+                    <p className="font-label text-xs uppercase tracking-widest text-on-surface/40">Awaiting Command Authorization...</p>
                  </div>
                ) : tasks.filter(t => t.status !== 'completed').map(task => {
                  const isCrit = task.urgency_score >= 80;
@@ -397,14 +397,14 @@ export default function FieldCenter() {
                     <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#fff 1px, transparent 1px)', backgroundSize: '16px 16px' }}></div>
                     
                     <div className="absolute top-0 right-4 px-3 py-1 bg-[#1e2535] rounded-b-md shadow-md border border-t-0 border-[#2a3441] z-10">
-                       <span className={`font-mono text-[9px] uppercase font-bold tracking-widest ${isCrit ? 'text-red-400' : 'text-white/40'}`}>
+                       <span className={`font-mono text-[9px] uppercase font-bold tracking-widest ${isCrit ? 'text-red-400' : 'text-on-surface/40'}`}>
                          ID: TS-{task.id.slice(0,5)}
                        </span>
                     </div>
 
                     <div className="relative z-10 flex-1">
                       <div className="flex items-center gap-3 mb-2 mt-4 text-white/80">
-                         <div className={`p-2 rounded-sm bg-white/5 border border-white/10 ${isCrit ? 'text-red-500' : 'text-[#ffd166]'}`}>
+                         <div className={`p-2 rounded-sm bg-white/5 border border-white/10 ${isCrit ? 'text-red-500' : 'text-primary'}`}>
                            <span className="material-symbols-outlined text-xl">
                               {task.issue_type === 'medical' ? 'medical_services' : task.issue_type === 'flood' ? 'waves' : 'warning_emerald'}
                            </span>
@@ -486,7 +486,7 @@ export default function FieldCenter() {
                      <p className="font-label text-[9px] uppercase tracking-widest text-white/20">Operational Log</p>
                      <h2 className="font-headline text-xl font-bold uppercase tracking-tight text-secondary">Mission History</h2>
                   </div>
-                  <span className="font-label text-[9px] text-white/40 uppercase tracking-widest">{tasks.filter(t => t.status === 'completed').length} Resolved</span>
+                  <span className="font-label text-[9px] text-on-surface/40 uppercase tracking-widest">{tasks.filter(t => t.status === 'completed').length} Resolved</span>
                </div>
 
                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -515,7 +515,7 @@ export default function FieldCenter() {
               <div className="scan-line top-0 opacity-10"></div>
               
               <div className="mb-8">
-                 <h2 className="font-headline text-lg font-bold text-[#ffd166] uppercase tracking-tighter">Field Intelligence</h2>
+                 <h2 className="font-headline text-lg font-bold text-primary uppercase tracking-tighter">Field Intelligence</h2>
                  <p className="font-label text-[9px] text-white/30 uppercase mt-1">Direct ARIA Uplink</p>
               </div>
 
@@ -529,7 +529,7 @@ export default function FieldCenter() {
                      <button
                        key={t.id}
                        onClick={() => setIntelType(t.id)}
-                       className={`flex-1 flex flex-col items-center gap-1.5 py-3 rounded-sm transition-all shadow-sm ${intelType === t.id ? 'bg-[#1e2535] border border-white/10 text-[#ffd166]' : 'text-white/30 hover:text-white/50 border border-transparent hover:bg-white/5'}`}
+                       className={`flex-1 flex flex-col items-center gap-1.5 py-3 rounded-sm transition-all shadow-sm ${intelType === t.id ? 'bg-[#1e2535] border border-white/10 text-primary' : 'text-white/30 hover:text-white/50 border border-transparent hover:bg-white/5'}`}
                      >
                        <span className="material-symbols-outlined text-[18px]">{t.icon}</span>
                        <span className="font-label text-[8px] uppercase tracking-[0.2em] font-black">{t.label}</span>
@@ -540,12 +540,12 @@ export default function FieldCenter() {
                 {/* GPS Signal Block */}
                 <div className="flex items-center justify-between p-4 bg-black/40 border border-[#1e2535] rounded-sm">
                    <div className="flex items-center gap-3">
-                      <span className={`material-symbols-outlined text-sm ${gpsCoords ? 'text-[#ffd166] animate-pulse' : 'text-white/10'}`}>
+                      <span className={`material-symbols-outlined text-sm ${gpsCoords ? 'text-primary animate-pulse' : 'text-white/10'}`}>
                          {gpsCoords ? 'location_searching' : 'location_disabled'}
                       </span>
                       <div>
                          <p className="font-label text-[8px] uppercase tracking-[0.2em] text-white/30">GPS Coordinates</p>
-                         <p className="font-mono text-[9px] text-[#ffd166]">
+                         <p className="font-mono text-[9px] text-primary">
                             {gpsCoords ? `${gpsCoords.lat.toFixed(4)}, ${gpsCoords.lng.toFixed(4)}` : 'SIGNAL OFFLINE'}
                          </p>
                       </div>
@@ -553,7 +553,7 @@ export default function FieldCenter() {
                    <button 
                      onClick={captureGps}
                      disabled={capturingGps}
-                     className={`px-3 py-1.5 font-label text-[8px] uppercase tracking-widest font-black transition-all border ${gpsCoords ? 'border-[#ffd166] text-[#ffd166] bg-[#ffd166]/10' : 'border-white/10 text-white/40 hover:border-[#ffd166] hover:text-[#ffd166]'}`}
+                     className={`px-3 py-1.5 font-label text-[8px] uppercase tracking-widest font-black transition-all border ${gpsCoords ? 'border-[#ffd166] text-primary bg-[#ffd166]/10' : 'border-white/10 text-on-surface/40 hover:border-[#ffd166] hover:text-primary'}`}
                    >
                       {capturingGps ? 'Locking...' : gpsCoords ? 'Recalibrate' : 'Share GPS'}
                    </button>
@@ -564,7 +564,7 @@ export default function FieldCenter() {
                     value={intelContent}
                     onChange={e => setIntelContent(e.target.value)}
                     placeholder="> AWAITING TEXTURAL INTEL..."
-                    className="w-full bg-black/80 shadow-inner border border-[#1e2535] p-5 text-xs font-mono text-[#ffd166] min-h-[140px] focus:border-[#ffd166]/50 outline-none transition-all placeholder:text-[#ffd166]/20 resize-none"
+                    className="w-full bg-black/80 shadow-inner border border-[#1e2535] p-5 text-xs font-mono text-primary min-h-[140px] focus:border-[#ffd166]/50 outline-none transition-all placeholder:text-primary/20 resize-none"
                   />
                 )}
 
@@ -573,13 +573,13 @@ export default function FieldCenter() {
                      <label className="group h-[140px] w-full bg-black/80 shadow-inner border-2 border-dashed border-[#1e2535] flex flex-col items-center justify-center cursor-pointer hover:border-[#ffd166]/50 hover:bg-[#ffd166]/5 transition-all overflow-hidden relative">
                         {intelFile ? (
                            <div className="absolute inset-0 bg-[#0a0e19] flex items-center justify-center p-3 border border-[#ffd166]/30">
-                              <span className="material-symbols-outlined text-[#ffd166] text-3xl mb-2 block text-center w-full">image</span>
-                              <p className="font-mono text-[9px] font-bold text-[#ffd166] truncate max-w-[200px] uppercase tracking-widest absolute bottom-4 text-center w-full">{intelFile.name}</p>
+                              <span className="material-symbols-outlined text-primary text-3xl mb-2 block text-center w-full">image</span>
+                              <p className="font-mono text-[9px] font-bold text-primary truncate max-w-[200px] uppercase tracking-widest absolute bottom-4 text-center w-full">{intelFile.name}</p>
                            </div>
                         ) : (
                            <>
-                              <span className="material-symbols-outlined text-[#1e2535] text-4xl group-hover:text-[#ffd166] transition-colors mb-2">upload_file</span>
-                              <span className="font-label text-[8px] font-bold text-white/30 uppercase tracking-[0.25em] group-hover:text-[#ffd166]">Secure Image Proof</span>
+                              <span className="material-symbols-outlined text-[#1e2535] text-4xl group-hover:text-primary transition-colors mb-2">upload_file</span>
+                              <span className="font-label text-[8px] font-bold text-white/30 uppercase tracking-[0.25em] group-hover:text-primary">Secure Image Proof</span>
                            </>
                         )}
                         <input type="file" accept="image/*" onChange={e => setIntelFile(e.target.files[0])} className="hidden" />
@@ -592,7 +592,7 @@ export default function FieldCenter() {
                      <div className="h-10 w-10 rounded-full bg-[#ef4444]/10 border border-[#ef4444]/30 flex items-center justify-center animate-pulse">
                         <span className="material-symbols-outlined text-xl text-[#ef4444]">mic</span>
                      </div>
-                     <p className="font-label text-[8px] text-white/40 uppercase tracking-widest">Awaiting Neural Transcription (v1.0)</p>
+                     <p className="font-label text-[8px] text-on-surface/40 uppercase tracking-widest">Awaiting Neural Transcription (v1.0)</p>
                      <span className="text-[7px] text-white/10 italic font-label">Audio nodes currently in bypass mode for demo</span>
                   </div>
                 )}

@@ -2,13 +2,39 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  /* DARK MODE (Default Tactical) */
+  --bg-color: #060b14;
+  --surface-color: #0f131e;
+  --surface-glass: rgba(15, 19, 30, 0.85);
+  --on-surface: #ffffff;
+  --primary: #ffd166;
+  --on-primary: #060b14;
+  --border-color: rgba(255, 242, 220, 0.04);
+  --sidebar-bg: #0f131e;
+  --text-dim: rgba(255, 255, 255, 0.4);
+  --accent-glow: rgba(255, 209, 102, 0.15);
+}
+
+html[data-theme='light'] {
+  /* LIGHT MODE (Operational Clarity) */
+  --bg-color: #f7f9fb;
+  --surface-color: #ffffff;
+  --surface-glass: rgba(255, 255, 255, 0.85);
+  --on-surface: #191c1e;
+  --primary: #8d4b00;
+  --on-primary: #ffffff;
+  --border-color: rgba(141, 75, 0, 0.1);
+  --sidebar-bg: #e0e3e5;
+  --text-dim: #554336;
+  --accent-glow: rgba(141, 75, 0, 0.05);
+}
+
 @layer base {
   body {
-    @apply bg-background text-on-background font-body;
-    /* Remove overflow:hidden to allow pages to scroll */
-  }
-  * {
-    box-sizing: border-box;
+    background-color: var(--bg-color);
+    color: var(--on-surface);
+    @apply font-body transition-colors duration-300;
   }
 }
 

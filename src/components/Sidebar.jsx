@@ -5,6 +5,8 @@ import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../firebase.js';
 import toast from 'react-hot-toast';
 import { useLanguage } from '../utils/i18n.jsx';
+import ThemeToggle from './ThemeToggle.jsx';
+
 export default function Sidebar() {
   const navigate = useNavigate();
   const role = localStorage.getItem('grandline_role') || 'volunteer';
@@ -17,8 +19,8 @@ export default function Sidebar() {
       className={({ isActive }) =>
         `flex items-center gap-4 mx-3 px-3 py-3 transition-all duration-200 border-l-2 ${
           isActive 
-            ? 'bg-primary-container/10 text-primary-container font-bold border-primary-container' 
-            : 'text-white/40 hover:bg-white/5 hover:text-white border-transparent'
+            ? 'bg-primary-container/10 text-primary font-bold border-primary' 
+            : 'text-on-surface/40 hover:bg-on-surface/5 hover:text-on-surface border-transparent'
         }`
       }
     >
@@ -54,16 +56,16 @@ export default function Sidebar() {
   };
 
   return (
-    <nav className="fixed left-0 top-0 h-full z-40 flex flex-col bg-[#0f131e]/95 backdrop-blur-xl w-20 md:w-64 border-r border-[#ffd166]/8 shadow-[12px_0_40px_rgba(0,0,0,0.6)]">
+    <nav className="fixed left-0 top-0 h-full z-40 flex flex-col bg-surface/95 backdrop-blur-xl w-20 md:w-64 border-r border-primary/10 shadow-[12px_0_40px_rgba(0,0,0,0.4)]">
       {/* Brand Header */}
       <div className="px-5 pt-7 pb-8 border-b border-white/5 relative overflow-hidden">
         <div className="scan-line top-0 opacity-10"></div>
-        <h1 className="font-headline font-black text-[#ffd166] text-lg tracking-tighter hidden md:block leading-none">GRANDLINE AI</h1>
+        <h1 className="font-headline font-black text-primary text-lg tracking-tighter hidden md:block leading-none">GRANDLINE AI</h1>
         <div className="flex items-center gap-2 mt-2 hidden md:flex">
-          <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${role === 'admin' || role === 'super_admin' ? 'bg-error' : role === 'state_admin' ? 'bg-[#ffd166]' : 'bg-primary-container'}`}></span>
-          <p className="font-label text-[8px] text-white/60 tracking-[0.3em] uppercase">{role === 'admin' || role === 'super_admin' ? t('sidebar_national') : role === 'state_admin' ? t('header_sector_bridge') : 'Field Specialist'}</p>
+          <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${role === 'admin' || role === 'super_admin' ? 'bg-error' : role === 'state_admin' ? 'bg-primary' : 'bg-primary'}`}></span>
+          <p className="font-label text-[8px] text-on-surface/60 tracking-[0.3em] uppercase">{role === 'admin' || role === 'super_admin' ? t('sidebar_national') : role === 'state_admin' ? t('header_sector_bridge') : 'Field Specialist'}</p>
         </div>
-        <span className="material-symbols-outlined text-[#ffd166] md:hidden text-2xl">shield</span>
+        <span className="material-symbols-outlined text-primary md:hidden text-2xl">shield</span>
       </div>
 
       <div className="flex-1 py-6 space-y-1">
@@ -94,18 +96,18 @@ export default function Sidebar() {
       {/* Action Footer */}
       <div className="p-4 space-y-3 border-t border-white/5 bg-white/2">
         {/* Language Switcher */}
-        <div className="flex items-center gap-2 px-3 py-1 bg-white/5 rounded-sm overflow-hidden mb-2">
-           <span className="material-symbols-outlined text-white/20 text-sm">translate</span>
+        <div className="flex items-center gap-2 px-3 py-1 bg-on-surface/5 rounded-sm overflow-hidden mb-2">
+           <span className="material-symbols-outlined text-on-surface/20 text-sm">translate</span>
            <select 
              value={lang} 
              onChange={(e) => setLang(e.target.value)}
-             className="bg-transparent text-white/40 font-label text-[8px] uppercase tracking-widest outline-none border-none flex-1 cursor-pointer hover:text-[#ffd166] transition-colors"
+             className="bg-transparent text-on-surface/40 font-label text-[8px] uppercase tracking-widest outline-none border-none flex-1 cursor-pointer hover:text-primary transition-colors"
            >
-             <option value="en" className="bg-[#0f131e]">English</option>
-             <option value="hi" className="bg-[#0f131e]">हिन्दी</option>
-             <option value="te" className="bg-[#0f131e]">తెలుగు</option>
-             <option value="tm" className="bg-[#0f131e]">தமிழ்</option>
-             <option value="ml" className="bg-[#0f131e]">മലയാളം</option>
+             <option value="en" className="bg-surface">English</option>
+             <option value="hi" className="bg-surface">हिन्दी</option>
+             <option value="te" className="bg-surface">తెలుగు</option>
+             <option value="tm" className="bg-surface">தமிழ்</option>
+             <option value="ml" className="bg-surface">മലയാളം</option>
            </select>
         </div>
 
@@ -119,9 +121,11 @@ export default function Sidebar() {
           </button>
         )}
 
+        <ThemeToggle />
+
         <button 
           onClick={() => navigate('/settings')}
-          className="w-full flex items-center gap-3 px-3 py-3 text-white/20 hover:text-[#ffd166] transition-colors text-xs font-label uppercase tracking-widest text-left group"
+          className="w-full flex items-center gap-3 px-3 py-3 text-on-surface/20 hover:text-primary transition-colors text-xs font-label uppercase tracking-widest text-left group"
         >
           <span className="material-symbols-outlined text-sm group-hover:-translate-x-1 transition-transform">manage_accounts</span>
           <span className="hidden md:inline">Profile Configuration</span>
@@ -129,7 +133,7 @@ export default function Sidebar() {
 
         <button 
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-3 py-3 text-white/20 hover:text-error transition-colors text-xs font-label uppercase tracking-widest text-left group"
+          className="w-full flex items-center gap-3 px-3 py-3 text-on-surface/20 hover:text-error transition-colors text-xs font-label uppercase tracking-widest text-left group"
         >
           <span className="material-symbols-outlined text-sm group-hover:-translate-x-1 transition-transform">logout</span>
           <span className="hidden md:inline">Terminate Session</span>

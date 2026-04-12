@@ -56,20 +56,20 @@ const STATE_CENTERS = {
 
 function StatCard({ label, value, icon, color, sub, loading, accent }) {
   return (
-    <div className={`relative overflow-hidden p-5 group cursor-default transition-all duration-300 border ${accent || 'border-white/5 hover:border-white/10'} bg-white/[0.02]`}>
+    <div className={`relative overflow-hidden p-5 group cursor-default transition-all duration-300 border ${accent || 'border-on-surface/5 hover:border-white/10'} bg-surface/2`}>
       {/* glow blob */}
       <div className={`absolute -top-6 -right-6 w-20 h-20 rounded-full blur-2xl opacity-20 ${color === 'text-red-400' ? 'bg-red-500' : color === 'text-green-400' ? 'bg-green-500' : 'bg-[#ffd166]'}`} />
       <div className="relative z-10">
         <div className="flex items-start justify-between mb-3">
           <span className={`material-symbols-outlined text-lg ${color}`}>{icon}</span>
           {sub !== undefined && (
-            <span className="font-label text-[7px] uppercase tracking-widest text-white/20 mt-1">{sub}</span>
+            <span className="font-label text-[7px] uppercase tracking-widest text-on-surface/20 mt-1">{sub}</span>
           )}
         </div>
         <p className={`font-headline text-3xl font-black tracking-tight ${color}`}>
           {loading ? <span className="opacity-30 animate-pulse">—</span> : value}
         </p>
-        <p className="font-label text-[8px] uppercase tracking-[0.25em] text-white/30 mt-1">{label}</p>
+        <p className="font-label text-[8px] uppercase tracking-[0.25em] text-on-surface/30 mt-1">{label}</p>
       </div>
     </div>
   );
@@ -367,13 +367,13 @@ export default function NationalMonitoring() {
     .slice(0, 6);
 
   return (
-    <div className="bg-[#060b14] text-white font-body h-screen overflow-hidden relative flex">
+    <div className="bg-background text-white font-body h-screen overflow-hidden relative flex">
       <Sidebar />
 
       <main className="flex-1 ml-20 md:ml-64 h-screen flex flex-col overflow-hidden">
 
         {/* ── TOP COMMAND BAR ─────────────────────────────────────────────── */}
-        <header className="flex-shrink-0 flex items-center justify-between px-8 h-16 bg-[#060b14]/95 backdrop-blur-2xl border-b border-[#ffd166]/10 z-50 relative">
+        <header className="flex-shrink-0 flex items-center justify-between px-8 h-16 bg-background/95 backdrop-blur-2xl border-b border-[#ffd166]/10 z-50 relative">
           <div className="scan-line top-0 opacity-10" />
 
           {/* Left: Identity */}
@@ -381,7 +381,7 @@ export default function NationalMonitoring() {
             <div>
               <div className="flex items-center gap-2 mb-0.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#ffd166] animate-pulse shadow-[0_0_8px_#ffd166]" />
-                <span className="font-label text-[8px] uppercase tracking-[0.5em] text-[#ffd166]/60">Operational Theatre · National Level</span>
+                <span className="font-label text-[8px] uppercase tracking-[0.5em] text-primary/60">Operational Theatre · National Level</span>
               </div>
               <h1 className="font-headline text-lg font-black text-white tracking-tight uppercase leading-none">
                 {t('header_national_command')}
@@ -414,7 +414,7 @@ export default function NationalMonitoring() {
             <NotificationBell />
             <div className="text-right hidden sm:block">
               <span className="font-label text-[8px] uppercase text-white/20 block">Node ID</span>
-              <span className="font-label text-[9px] text-[#ffd166]/60 font-bold">IND-NTL-CTR-01</span>
+              <span className="font-label text-[9px] text-primary/60 font-bold">IND-NTL-CTR-01</span>
             </div>
           </div>
         </header>
@@ -425,7 +425,7 @@ export default function NationalMonitoring() {
           <StatCard label={t('stats_deployed')} value={activeDeployments}  icon="rocket_launch"  color="text-green-400"  loading={loading} accent="border-green-500/10 hover:border-green-500/20" />
           <StatCard label={t('stats_critical')}    value={criticalCount}     icon="emergency"      color="text-red-400"    loading={loading} accent="border-red-500/10 hover:border-red-500/20" />
           <StatCard label={t('tab_resolved_archives')}    value={completedTasks}    icon="check_circle"    color="text-blue-400"   loading={loading} accent="border-blue-500/10 hover:border-blue-500/20" />
-          <StatCard label={t('stats_available')}   value={availVols}         icon="person_pin"     color="text-[#ffd166]"  loading={loading} />
+          <StatCard label={t('stats_available')}   value={availVols}         icon="person_pin"     color="text-primary"  loading={loading} />
         </div>
 
         {/* ── MAIN GRID ───────────────────────────────────────────────────── */}
@@ -436,8 +436,8 @@ export default function NationalMonitoring() {
             {/* Header */}
             <div className="flex-shrink-0 px-5 py-4 border-b border-white/5 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-[#ffd166] text-sm">stream</span>
-                <span className="font-label text-[9px] uppercase tracking-widest text-[#ffd166] font-black">Live Event Stream</span>
+                <span className="material-symbols-outlined text-primary text-sm">stream</span>
+                <span className="font-label text-[9px] uppercase tracking-widest text-primary font-black">Live Event Stream</span>
               </div>
               <span className="font-label text-[7px] uppercase tracking-widest text-white/20 tabular-nums">{events.length} events</span>
             </div>
@@ -477,13 +477,13 @@ export default function NationalMonitoring() {
                       </div>
                       <p className="font-body text-[10px] text-white/70 leading-snug truncate">{event.message}</p>
                       {event.translation_detected && (
-                        <p className="font-label text-[6px] text-[#ffd166]/40 uppercase tracking-widest mt-1 italic">
+                        <p className="font-label text-[6px] text-primary/40 uppercase tracking-widest mt-1 italic">
                           Neural Translation Active
                         </p>
                       )}
                       <div className="flex items-center gap-2 mt-1">
                         {event.state && (
-                          <span className="font-label text-[6px] uppercase tracking-wider text-[#ffd166]/50 px-1.5 py-0.5 border border-[#ffd166]/10 bg-[#ffd166]/5">
+                          <span className="font-label text-[6px] uppercase tracking-wider text-primary/50 px-1.5 py-0.5 border border-[#ffd166]/10 bg-[#ffd166]/5">
                             {event.state}
                           </span>
                         )}
@@ -509,16 +509,16 @@ export default function NationalMonitoring() {
 
             {/* Top map label */}
             <div className="absolute top-4 left-1/2 -translate-x-1/2 pointer-events-none z-10">
-              <div className="flex items-center gap-2 bg-[#060b14]/80 backdrop-blur-xl border border-[#ffd166]/15 px-4 py-2">
+              <div className="flex items-center gap-2 bg-background/80 backdrop-blur-xl border border-[#ffd166]/15 px-4 py-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#ffd166] animate-pulse" />
-                <span className="font-label text-[8px] uppercase tracking-[0.3em] text-[#ffd166]/70 font-bold">
+                <span className="font-label text-[8px] uppercase tracking-[0.3em] text-primary/70 font-bold">
                   National Threat Map · India
                 </span>
               </div>
             </div>
 
             {/* Map Mode Toggle Overlay */}
-            <div className="absolute top-4 right-4 z-10 flex gap-1 p-1 bg-[#060b14]/80 backdrop-blur-xl border border-white/5 shadow-2xl pointer-events-auto">
+            <div className="absolute top-4 right-4 z-10 flex gap-1 p-1 bg-background/80 backdrop-blur-xl border border-white/5 shadow-2xl pointer-events-auto">
                <button 
                  onClick={() => setMapMode('tactical')}
                  className={`px-3 py-1.5 font-label text-[7px] uppercase tracking-widest font-black transition-all ${mapMode === 'tactical' ? 'bg-[#ffd166] text-[#060b14]' : 'text-white/30 hover:text-white hover:bg-white/5'}`}
@@ -536,7 +536,7 @@ export default function NationalMonitoring() {
             {/* Bottom HUD strip */}
             <div className="absolute bottom-0 left-0 right-0 pointer-events-none z-10 p-4 flex items-end justify-between">
               {/* Issue count badge */}
-              <div className="bg-[#060b14]/90 backdrop-blur border border-white/10 px-4 py-3 flex items-center gap-3">
+              <div className="bg-background/90 backdrop-blur border border-white/10 px-4 py-3 flex items-center gap-3">
                 <div>
                   <p className="font-label text-[7px] uppercase text-white/20 tracking-widest">Active Signals</p>
                   <p className="font-headline text-xl font-black text-white">{totalIssues}</p>
@@ -549,7 +549,7 @@ export default function NationalMonitoring() {
               </div>
 
               {/* Legend */}
-              <div className="bg-[#060b14]/90 backdrop-blur border border-white/10 px-4 py-3">
+              <div className="bg-background/90 backdrop-blur border border-white/10 px-4 py-3">
                 <p className="font-label text-[7px] uppercase text-white/20 tracking-widest mb-2">Severity Scale</p>
                 <div className="flex items-center gap-3">
                   {[['#ef4444','Critical (80+)'],['#f97316','High (60+)'],['#ffd166','Active']].map(([c,l]) => (
@@ -595,7 +595,7 @@ export default function NationalMonitoring() {
             </div>
 
             <div className="flex-shrink-0 px-5 py-4 border-b border-white/5">
-              <span className="font-label text-[9px] uppercase tracking-widest text-[#ffd166] font-black flex items-center gap-2">
+              <span className="font-label text-[9px] uppercase tracking-widest text-primary font-black flex items-center gap-2">
                 <span className="material-symbols-outlined text-sm">monitoring</span>
                 State Criticality Index
               </span>
@@ -667,12 +667,12 @@ export default function NationalMonitoring() {
 
               {/* Global Coordination Feed (Actionable for Super Admin) */}
               <div className="mt-4 pt-4 border-t border-white/5 flex flex-col overflow-hidden min-h-[300px]">
-                <span className="font-label text-[8px] uppercase tracking-widest text-[#ffd166] block mb-3 font-black">National Assistance Queue</span>
+                <span className="font-label text-[8px] uppercase tracking-widest text-primary block mb-3 font-black">National Assistance Queue</span>
                 <div className="flex-1 overflow-y-auto space-y-2 pr-1" style={{ scrollbarWidth: 'none' }}>
                   {assistanceRequests.filter(r => r.status === 'pending').map(req => (
                     <div key={req.id} className="p-3 bg-white/[0.04] border border-[#ffd166]/20 animate-in slide-in-from-right duration-300">
                       <div className="flex justify-between items-center mb-1.5">
-                        <span className="font-label text-[8px] uppercase text-[#ffd166] font-bold">Pending: {req.fromState}</span>
+                        <span className="font-label text-[8px] uppercase text-primary font-bold">Pending: {req.fromState}</span>
                         <span className="font-label text-[6px] text-white/20">#{req.issueId?.slice(0,6)}</span>
                       </div>
                       <p className="font-body text-[9px] text-white/60 mb-3 italic">"{req.reason}"</p>
@@ -682,7 +682,7 @@ export default function NationalMonitoring() {
                           <select 
                             value={targetState}
                             onChange={(e) => setTargetState(e.target.value)}
-                            className="w-full bg-[#060b14] border border-white/20 p-2 text-[9px] font-label text-white uppercase"
+                            className="w-full bg-background border border-white/20 p-2 text-[9px] font-label text-white uppercase"
                           >
                             <option value="">Select Resource Partner</option>
                             {Object.keys(STATE_CENTERS).filter(s => s !== req.fromState).sort().map(s => (
@@ -695,7 +695,7 @@ export default function NationalMonitoring() {
                           </div>
                         </div>
                       ) : (
-                        <button onClick={() => setSelectedRequest(req)} className="w-full py-1.5 border border-[#ffd166]/30 text-[#ffd166] font-label text-[8px] uppercase tracking-widest font-black hover:bg-[#ffd166]/5">Review & Route</button>
+                        <button onClick={() => setSelectedRequest(req)} className="w-full py-1.5 border border-[#ffd166]/30 text-primary font-label text-[8px] uppercase tracking-widest font-black hover:bg-[#ffd166]/5">Review & Route</button>
                       )}
                     </div>
                   ))}
@@ -728,7 +728,7 @@ export default function NationalMonitoring() {
                 <div className="space-y-2">
                   {events.filter(e => e.type === 'deployment' || e.type === 'deployment_triggered').slice(0, 4).map(e => (
                     <div key={e.id} className="flex items-center gap-2 px-3 py-2 bg-[#ffd166]/5 border border-[#ffd166]/10">
-                      <span className="material-symbols-outlined text-[#ffd166] text-xs">rocket_launch</span>
+                      <span className="material-symbols-outlined text-primary text-xs">rocket_launch</span>
                       <div className="flex-1 min-w-0">
                         <p className="font-body text-[9px] text-white/60 truncate">{e.message}</p>
                         <p className="font-label text-[6px] uppercase text-white/20">{e.state || 'National Command'}</p>
