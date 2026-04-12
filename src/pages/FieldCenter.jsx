@@ -3,6 +3,7 @@ import { collection, onSnapshot, query, where, doc, updateDoc, addDoc, serverTim
 import { auth, db } from '../firebase.js';
 import Sidebar from '../components/Sidebar.jsx';
 import toast from 'react-hot-toast';
+import { useLanguage } from '../utils/i18n.jsx';
 import { extractIntelFrontend } from '../utils/gemini.js';
 import NotificationBell from '../components/NotificationBell.jsx';
 import BroadcastReceiver from '../components/BroadcastReceiver.jsx';
@@ -49,6 +50,7 @@ const DISTRICT_CENTERS = {
 };
 
 export default function FieldCenter() {
+  const { t } = useLanguage();
   const [profile, setProfile] = useState(null);
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);

@@ -4,6 +4,7 @@ import { db } from '../firebase.js';
 import Sidebar from '../components/Sidebar.jsx';
 import NotificationBell from '../components/NotificationBell.jsx';
 import toast from 'react-hot-toast';
+import { useLanguage } from '../utils/i18n.jsx';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 const INDIA_CENTER = { lat: 22.5, lng: 82.5 };
@@ -75,6 +76,7 @@ function StatCard({ label, value, icon, color, sub, loading, accent }) {
 }
 
 export default function NationalMonitoring() {
+  const { t } = useLanguage();
   const [events, setEvents]   = useState([]);
   const [issues, setIssues]   = useState([]);
   const [volunteers, setVols] = useState([]);
@@ -382,7 +384,7 @@ export default function NationalMonitoring() {
                 <span className="font-label text-[8px] uppercase tracking-[0.5em] text-[#ffd166]/60">Operational Theatre · National Level</span>
               </div>
               <h1 className="font-headline text-lg font-black text-white tracking-tight uppercase leading-none">
-                National Command Center
+                {t('header_national_command')}
               </h1>
             </div>
 
@@ -419,11 +421,11 @@ export default function NationalMonitoring() {
 
         {/* ── STATS ROW ───────────────────────────────────────────────────── */}
         <div className="flex-shrink-0 grid grid-cols-5 border-b border-white/5">
-          <StatCard label="Total Signals"      value={totalIssues}       icon="analytics"      color="text-white"      loading={loading} />
-          <StatCard label="Active Deployments" value={activeDeployments}  icon="rocket_launch"  color="text-green-400"  loading={loading} accent="border-green-500/10 hover:border-green-500/20" />
-          <StatCard label="Critical Alerts"    value={criticalCount}     icon="emergency"      color="text-red-400"    loading={loading} accent="border-red-500/10 hover:border-red-500/20" />
-          <StatCard label="Completed Tasks"    value={completedTasks}    icon="check_circle"    color="text-blue-400"   loading={loading} accent="border-blue-500/10 hover:border-blue-500/20" />
-          <StatCard label="Available Assets"   value={availVols}         icon="person_pin"     color="text-[#ffd166]"  loading={loading} />
+          <StatCard label={t('stats_total_issues')}      value={totalIssues}       icon="analytics"      color="text-white"      loading={loading} />
+          <StatCard label={t('stats_deployed')} value={activeDeployments}  icon="rocket_launch"  color="text-green-400"  loading={loading} accent="border-green-500/10 hover:border-green-500/20" />
+          <StatCard label={t('stats_critical')}    value={criticalCount}     icon="emergency"      color="text-red-400"    loading={loading} accent="border-red-500/10 hover:border-red-500/20" />
+          <StatCard label={t('tab_resolved_archives')}    value={completedTasks}    icon="check_circle"    color="text-blue-400"   loading={loading} accent="border-blue-500/10 hover:border-blue-500/20" />
+          <StatCard label={t('stats_available')}   value={availVols}         icon="person_pin"     color="text-[#ffd166]"  loading={loading} />
         </div>
 
         {/* ── MAIN GRID ───────────────────────────────────────────────────── */}

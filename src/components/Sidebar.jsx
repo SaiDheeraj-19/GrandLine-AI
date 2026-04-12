@@ -4,12 +4,13 @@ import { signOut } from 'firebase/auth';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../firebase.js';
 import toast from 'react-hot-toast';
-
+import { useLanguage } from '../utils/i18n.jsx';
 export default function Sidebar() {
   const navigate = useNavigate();
   const role = localStorage.getItem('grandline_role') || 'volunteer';
+  const { lang, setLang, t } = useLanguage();
 
-  const NavItem = ({ to, icon, label, end }) => (
+  const Item = ({ to, icon, label, end }) => (
     <NavLink 
       to={to} 
       end={end} 
@@ -22,7 +23,7 @@ export default function Sidebar() {
       }
     >
       <span className="material-symbols-outlined text-xl">{icon}</span>
-      <span className="font-headline tracking-wide text-xs hidden md:block uppercase leading-none">{label}</span>
+      <span className="font-headline tracking-wide text-xs hidden md:block uppercase leading-none">{t(label)}</span>
     </NavLink>
   );
 
@@ -60,38 +61,54 @@ export default function Sidebar() {
         <h1 className="font-headline font-black text-[#ffd166] text-lg tracking-tighter hidden md:block leading-none">GRANDLINE AI</h1>
         <div className="flex items-center gap-2 mt-2 hidden md:flex">
           <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${role === 'admin' || role === 'super_admin' ? 'bg-error' : role === 'state_admin' ? 'bg-[#ffd166]' : 'bg-primary-container'}`}></span>
-          <p className="font-label text-[8px] text-white/60 tracking-[0.3em] uppercase">{role === 'admin' || role === 'super_admin' ? 'National Command' : role === 'state_admin' ? 'Sector Admin' : 'Field Specialist'}</p>
+          <p className="font-label text-[8px] text-white/60 tracking-[0.3em] uppercase">{role === 'admin' || role === 'super_admin' ? t('sidebar_national') : role === 'state_admin' ? t('header_sector_bridge') : 'Field Specialist'}</p>
         </div>
         <span className="material-symbols-outlined text-[#ffd166] md:hidden text-2xl">shield</span>
       </div>
 
       <div className="flex-1 py-6 space-y-1">
-        <NavItem 
+        <Item 
           to={(role === 'super_admin' || role === 'admin') ? '/dashboard/national' : role === 'state_admin' ? '/dashboard/state' : '/dashboard/volunteer'} 
           icon="radar" 
-          label="Command Deck" 
+          label="sidebar_command_deck" 
         />
         
         {(role === 'admin' || role === 'super_admin') && (
           <>
-            <NavItem to="/volunteers" icon="diversity_3"  label="Operations Overview" />
-            <NavItem to="/dashboard/national/admins" icon="admin_panel_settings"  label="Sector Commands" />
+            <Item to="/volunteers" icon="diversity_3"  label="Operations Overview" />
+            <Item to="/dashboard/national/admins" icon="admin_panel_settings"  label="Sector Commands" />
           </>
         )}
 
         {role === 'state_admin' && (
-          <NavItem to="/dashboard/state/volunteers" icon="groups" label="Volunteers" />
+          <Item to="/dashboard/state/volunteers" icon="groups" label="sidebar_volunteers" />
         )}
 
-        {(role === 'volunteer' || !role) && (
-          <NavItem to="/dashboard/volunteer" icon="diversity_3" label="Operations" />
+        {(role === 'volunteer' || role === 'user' || !role) && (
+          <Item to="/dashboard/volunteer" icon="diversity_3" label="sidebar_command_deck" />
         )}
 
-        <NavItem to="/dashboard/comms" icon="cell_tower" label="Secure Comms" />
+        <Item to="/dashboard/comms" icon="cell_tower" label="sidebar_comms" />
       </div>
 
       {/* Action Footer */}
       <div className="p-4 space-y-3 border-t border-white/5 bg-white/2">
+        {/* Language Switcher */}
+        <div className="flex items-center gap-2 px-3 py-1 bg-white/5 rounded-sm overflow-hidden mb-2">
+           <span className="material-symbols-outlined text-white/20 text-sm">translate</span>
+           <select 
+             value={lang} 
+             onChange={(e) => setLang(e.target.value)}
+             className="bg-transparent text-white/40 font-label text-[8px] uppercase tracking-widest outline-none border-none flex-1 cursor-pointer hover:text-[#ffd166] transition-colors"
+           >
+             <option value="en" className="bg-[#0f131e]">English</option>
+             <option value="hi" className="bg-[#0f131e]">हिन्दी</option>
+             <option value="te" className="bg-[#0f131e]">తెలుగు</option>
+             <option value="tm" className="bg-[#0f131e]">தமிழ்</option>
+             <option value="ml" className="bg-[#0f131e]">മലയാളം</option>
+           </select>
+        </div>
+
         {(role === 'admin' || role === 'super_admin') && (
           <button
             onClick={handleSeed}

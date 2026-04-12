@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { collection, query, orderBy, limit, onSnapshot, where, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase.js';
+import { useLanguage } from '../utils/i18n.jsx';
 
 export default function BroadcastReceiver() {
+  const { t } = useLanguage();
   const [activeBroadcast, setActiveBroadcast] = useState(null);
 
   useEffect(() => {
@@ -45,7 +47,7 @@ export default function BroadcastReceiver() {
         <div className="bg-red-500 p-4 flex items-center justify-between">
            <div className="flex items-center gap-3">
               <span className="material-symbols-outlined text-white animate-pulse">campaign</span>
-              <h2 className="font-headline text-lg font-black text-white uppercase tracking-[0.2em]">Neural Broadcast Detected</h2>
+              <h2 className="font-headline text-lg font-black text-white uppercase tracking-[0.2em]">{t('alert_neural_broadcast')}</h2>
            </div>
            <span className="font-mono text-[10px] text-white/60 font-black">ORIGIN: NATIONAL_COMMAND</span>
         </div>
@@ -74,7 +76,7 @@ export default function BroadcastReceiver() {
                 onClick={() => setActiveBroadcast(null)}
                 className="px-10 py-3 bg-red-500 text-white font-label text-[10px] uppercase font-black tracking-[0.2em] hover:bg-red-600 transition-all shadow-lg"
               >
-                 Acknowledge & Sync
+                 {t('btn_acknowledge')}
               </button>
            </div>
         </div>

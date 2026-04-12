@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 import Sidebar from '../components/Sidebar.jsx';
 import NotificationBell from '../components/NotificationBell.jsx';
 import BroadcastReceiver from '../components/BroadcastReceiver.jsx';
+import { useLanguage } from '../utils/i18n.jsx';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 const MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
@@ -94,6 +95,7 @@ function SectionHeader({ icon, title, count, action }) {
 
 // ── Main Component ────────────────────────────────────────────────────────────
 export default function StateAdminDashboard() {
+  const { t } = useLanguage();
   const userState = localStorage.getItem('grandline_state') || 'N/A';
   const userId    = localStorage.getItem('grandline_uid')   || 'state_admin';
 
@@ -587,12 +589,12 @@ export default function StateAdminDashboard() {
         {/* ── STATS ROW ───────────────────────────────────────────────────── */}
         <div className="flex-shrink-0 grid grid-cols-6 border-b border-white/[0.06]">
           {[
-            { label:'Total Issues',  val:stats.total,    icon:'analytics',     c:'text-white'     },
-            { label:'Critical',      val:stats.critical, icon:'emergency',     c:'text-red-400'   },
-            { label:'Pending',       val:stats.pending,  icon:'hourglass_empty',c:'text-orange-400'},
-            { label:'Deployed',      val:stats.deployed, icon:'rocket_launch', c:'text-green-400' },
-            { label:'Volunteers',    val:stats.vols,     icon:'group',         c:'text-blue-400'  },
-            { label:'Available Now', val:stats.available,icon:'check_circle',  c:'text-[#ffd166]' },
+            { label:t('stats_total_issues'),  val:stats.total,    icon:'analytics',     c:'text-white'     },
+            { label:t('stats_critical'),      val:stats.critical, icon:'emergency',     c:'text-red-400'   },
+            { label:t('stats_pending'),       val:stats.pending,  icon:'hourglass_empty',c:'text-orange-400'},
+            { label:t('stats_deployed'),      val:stats.deployed, icon:'rocket_launch', c:'text-green-400' },
+            { label:t('stats_volunteers'),    val:stats.vols,     icon:'group',         c:'text-blue-400'  },
+            { label:t('stats_available'), val:stats.available,icon:'check_circle',  c:'text-[#ffd166]' },
           ].map(s => (
             <div key={s.label} className="flex flex-col justify-center px-4 py-4 border-r border-white/[0.04] last:border-r-0 hover:bg-white/[0.02] cursor-default transition-all">
               <span className={`material-symbols-outlined text-sm mb-1 ${s.c}`}>{s.icon}</span>
@@ -872,7 +874,7 @@ export default function StateAdminDashboard() {
                       )}
                       {activeIssue.translation_detected && activeIssue.original_summary && (
                         <div className="mt-2 p-2 bg-blue-500/5 border border-blue-500/10 rounded-sm">
-                           <p className="font-label text-[6px] text-blue-400 uppercase font-black mb-1">ARIA Dialect Original</p>
+                           <p className="font-label text-[6px] text-blue-400 uppercase font-black mb-1">{t('dialect_original')}</p>
                            <p className="font-body text-[8px] text-white/30 italic leading-snug">
                               "{activeIssue.original_summary}"
                            </p>
