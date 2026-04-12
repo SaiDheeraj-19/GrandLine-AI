@@ -63,6 +63,8 @@ export default function FieldCenter() {
   const [capturingGps, setCapturingGps] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [verifyingTaskId, setVerifyingTaskId] = useState(null);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
   const verifyFileRef = useRef(null);
 
   const mapRef = useRef(null);
@@ -419,41 +421,65 @@ export default function FieldCenter() {
                   <div className="absolute top-3 right-3 flex flex-col gap-2">
                     <button 
                       type="button"
-                      onClick={() => {
-                        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-                        const recognition = SpeechRecognition ? new SpeechRecognition() : null;
-
+                      onClick={async () => {
                         if (!isRecording) {
-                          if (!recognition) {
-                             toast.error('Voice Protocol Not Supported in this Node');
-                             return;
+                          try {
+                            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                            const mediaRecorder = new MediaRecorder(stream);
+                            mediaRecorderRef.current = mediaRecorder;
+                            audioChunksRef.current = [];
+
+                            mediaRecorder.ondataavailable = (event) => {
+                              if (event.data.size > 0) audioChunksRef.current.push(event.data);
+                            };
+
+                            mediaRecorder.onstop = async () => {
+                              const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
+                              const formData = new FormData();
+                              formData.append('file', audioBlob, 'intel.wav');
+                              formData.append('model', 'saaras:v3');
+                              
+                              // Mapping our app codes to Sarvam BCP-47
+                              const langMap = {
+                                hi: 'hi-IN', te: 'te-IN', tm: 'ta-IN', ml: 'ml-IN', 
+                                mr: 'mr-IN', bn: 'bn-IN', gu: 'gu-IN', kn: 'kn-IN', 
+                                pa: 'pa-IN', en: 'en-IN'
+                              };
+                              formData.append('language_code', langMap[lang] || 'en-IN');
+
+                              const loadToast = toast.loading('ARIA — Processing Sarvam Neural Link...');
+                              try {
+                                const response = await fetch('https://api.sarvam.ai/speech-to-text', {
+                                  method: 'POST',
+                                  headers: {
+                                    'api-subscription-key': 'sk_39c5ri93_We8aEsffU6hHfWNnCRy9Hm2F'
+                                  },
+                                  body: formData
+                                });
+                                const data = await response.json();
+                                if (data.transcript) {
+                                  setIntelContent(prev => prev + (prev ? ' ' : '') + data.transcript);
+                                  toast.success('Sarvam Intelligence Ingested', { id: loadToast });
+                                } else {
+                                  throw new Error('Transcription Null');
+                                }
+                              } catch (err) {
+                                toast.error('Sarvam Link Error: ' + err.message, { id: loadToast });
+                              }
+                            };
+
+                            mediaRecorder.start();
+                            setIsRecording(true);
+                            toast('Sarvam Neural Link Active', { icon: '🤖' });
+                          } catch (err) {
+                            toast.error('Tactical Audio Error: ' + err.message);
                           }
-                          setIsRecording(true);
-                          recognition.continuous = true;
-                          recognition.interimResults = true;
-                          recognition.lang = lang === 'hi' ? 'hi-IN' : lang === 'te' ? 'te-IN' : 'en-IN'; // Link to active dialect
-                          
-                          recognition.onresult = (event) => {
-                             const transcript = Array.from(event.results)
-                               .map(result => result[0])
-                               .map(result => result.transcript)
-                               .join('');
-                             setIntelContent(transcript);
-                          };
-
-                          recognition.onend = () => {
-                             setIsRecording(false);
-                          };
-
-                          recognition.start();
-                          window._activeRecognition = recognition;
-                          toast('Neural Voice Capture Initiated', { icon: '🎙️' });
                         } else {
-                          if (window._activeRecognition) {
-                            window._activeRecognition.stop();
+                          if (mediaRecorderRef.current) {
+                            mediaRecorderRef.current.stop();
+                            mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
                           }
                           setIsRecording(false);
-                          toast.success('Voice Intelligence Synchronized');
                         }
                       }}
                       className={`w-8 h-8 rounded-full bg-black/40 border transition-all flex items-center justify-center ${isRecording ? 'border-red-500 text-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]' : 'border-white/10 text-white/40 hover:text-primary hover:border-primary'}`}
