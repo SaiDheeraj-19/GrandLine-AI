@@ -177,9 +177,9 @@ export default function StateAdminDashboard() {
       severityFilter === 'high'     ? (sev >= 60 && sev < 80) :
       severityFilter === 'medium'   ? (sev >= 40 && sev < 60) : true;
     
-    // If 'all' is selected, show all EXCEPT completed to keep the active feed clean
+    // If 'active' tab, exclude completed. If 'past' tab, specifically look for completed.
     const matchStatus = statusFilter === 'all' 
-      ? i.status !== 'completed' 
+      ? (issueFeedTab === 'past' ? true : i.status !== 'completed')
       : i.status === statusFilter;
       
     // New tab logic

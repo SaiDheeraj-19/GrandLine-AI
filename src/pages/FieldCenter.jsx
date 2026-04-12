@@ -14,6 +14,8 @@ export default function FieldCenter() {
   const [intelType, setIntelType] = useState('text'); // text, image, voice
   const [intelContent, setIntelContent] = useState('');
   const [intelFile, setIntelFile] = useState(null);
+  const [gpsCoords, setGpsCoords] = useState(null);
+  const [capturingGps, setCapturingGps] = useState(false);
 
   // 1. Find the logged-in volunteer's profile
   useEffect(() => {
@@ -61,6 +63,24 @@ export default function FieldCenter() {
     }
   };
 
+  // 3.5 Capture GPS
+  const captureGps = () => {
+    if (!navigator.geolocation) return toast.error('Geolocation not supported');
+    setCapturingGps(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setGpsCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setCapturingGps(false);
+        toast.success('GPS Coordinates Locked');
+      },
+      (err) => {
+        toast.error('GPS Lock Failed: ' + err.message);
+        setCapturingGps(false);
+      },
+      { enableHighAccuracy: true }
+    );
+  };
+
   // 4. Handle Field Intelligence Submission (Report)
   const handleTransmitSignal = async () => {
     if (!intelContent && !intelFile) return toast.error('Signal transmission requires payload');
@@ -93,6 +113,7 @@ export default function FieldCenter() {
         timestamp: serverTimestamp(),
         location: {
           ...extracted.location,
+          ...(gpsCoords || {}),
           state: profile?.location?.state || 'Unknown'
         }
       });
@@ -110,6 +131,7 @@ export default function FieldCenter() {
       toast.success('Intelligence Successfully Ingested by ARIA', { id: loadToast });
       setIntelContent('');
       setIntelFile(null);
+      setGpsCoords(null);
       setIntelType('text');
     } catch (err) {
       toast.error('Uplink Failed: ' + err.message, { id: loadToast });
@@ -309,6 +331,28 @@ export default function FieldCenter() {
                        <span className="font-label text-[8px] uppercase tracking-[0.2em] font-black">{t.label}</span>
                      </button>
                    ))}
+                </div>
+
+                {/* GPS Signal Block */}
+                <div className="flex items-center justify-between p-4 bg-black/40 border border-[#1e2535] rounded-sm">
+                   <div className="flex items-center gap-3">
+                      <span className={`material-symbols-outlined text-sm ${gpsCoords ? 'text-[#ffd166] animate-pulse' : 'text-white/10'}`}>
+                         {gpsCoords ? 'location_searching' : 'location_disabled'}
+                      </span>
+                      <div>
+                         <p className="font-label text-[8px] uppercase tracking-[0.2em] text-white/30">GPS Coordinates</p>
+                         <p className="font-mono text-[9px] text-[#ffd166]">
+                            {gpsCoords ? `${gpsCoords.lat.toFixed(4)}, ${gpsCoords.lng.toFixed(4)}` : 'SIGNAL OFFLINE'}
+                         </p>
+                      </div>
+                   </div>
+                   <button 
+                     onClick={captureGps}
+                     disabled={capturingGps}
+                     className={`px-3 py-1.5 font-label text-[8px] uppercase tracking-widest font-black transition-all border ${gpsCoords ? 'border-[#ffd166] text-[#ffd166] bg-[#ffd166]/10' : 'border-white/10 text-white/40 hover:border-[#ffd166] hover:text-[#ffd166]'}`}
+                   >
+                      {capturingGps ? 'Locking...' : gpsCoords ? 'Recalibrate' : 'Share GPS'}
+                   </button>
                 </div>
 
                 {intelType === 'text' && (
