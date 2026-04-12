@@ -11,7 +11,6 @@ export default function BroadcastReceiver() {
     const oneHourAgo = new Date(Date.now() - 3600000);
     const q = query(
       collection(db, 'broadcasts'),
-      where('active', '==', true),
       orderBy('timestamp', 'desc'),
       limit(1)
     );
@@ -19,9 +18,11 @@ export default function BroadcastReceiver() {
     const unsub = onSnapshot(q, snap => {
       if (!snap.empty) {
         const data = snap.docs[0].data();
-        // Check if it's recent (sanity check)
-        if (data.timestamp?.toDate() > oneHourAgo) {
+        // Check if it's active AND recent (sanity check)
+        if (data.active && data.timestamp?.toDate() > oneHourAgo) {
           setActiveBroadcast({ id: snap.docs[0].id, ...data });
+        } else {
+          setActiveBroadcast(null);
         }
       } else {
         setActiveBroadcast(null);
