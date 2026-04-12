@@ -25,7 +25,16 @@ function ProtectedRoute({ children, requiredRole }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    return onAuthStateChanged(auth, async (u) => {
+    // Fail-safe: if authentication doesn't resolve in 5 seconds, clear loading
+    const timeout = setTimeout(() => {
+      if (loading) {
+        console.warn("ProtectedRoute: Auth resolution timeout reached. Clearing loading state.");
+        setLoading(false);
+      }
+    }, 5000);
+
+    const unsubscribe = onAuthStateChanged(auth, async (u) => {
+      clearTimeout(timeout);
       setUser(u);
       if (u) {
         try {
@@ -33,16 +42,19 @@ function ProtectedRoute({ children, requiredRole }) {
           if (userSnap.exists()) {
             const data = userSnap.data();
             setUserData(data);
-            // Sync localStorage just in case, but rely on userData for internal logic
             localStorage.setItem('grandline_role', data.role);
             localStorage.setItem('grandline_state', data.state);
           }
         } catch (err) {
-          console.error("Error fetching user role:", err);
+          console.error("ProtectedRoute: Session error:", err);
         }
       }
       setLoading(false);
     });
+    return () => {
+      clearTimeout(timeout);
+      unsubscribe();
+    };
   }, []);
 
   if (loading) return (
@@ -70,7 +82,7 @@ function ConditionalAIChat() {
 
 function RoleBasedRedirect() {
   const role = localStorage.getItem('grandline_role');
-  if (role === 'super_admin') return <Navigate to="/dashboard/national" replace />;
+  if (role === 'super_admin' || role === 'admin') return <Navigate to="/dashboard/national" replace />;
   if (role === 'state_admin') return <Navigate to="/dashboard/state" replace />;
   if (role === 'volunteer') return <Navigate to="/dashboard/volunteer" replace />;
   return <Navigate to="/login" replace />;

@@ -66,7 +66,11 @@ export default function Sidebar() {
       </div>
 
       <div className="flex-1 py-6 space-y-1">
-        <NavItem to="/"           icon="radar"        label="Command Deck" end />
+        <NavItem 
+          to={(role === 'super_admin' || role === 'admin') ? '/dashboard/national' : role === 'state_admin' ? '/dashboard/state' : '/dashboard/volunteer'} 
+          icon="radar" 
+          label="Command Deck" 
+        />
         
         {(role === 'admin' || role === 'super_admin') && (
           <>

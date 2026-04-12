@@ -203,15 +203,20 @@ export default function StateAdminDashboard() {
 
   // ── Map ───────────────────────────────────────────────────────────────────
   const initMap = useCallback(() => {
-    if (mapReadyRef.current || !mapRef.current) return;
+    if (mapReadyRef.current || !mapRef.current || !window.google?.maps) return;
     mapReadyRef.current = true;
     const center = viewMode === 'state'
       ? (STATE_CENTERS[userState] || INDIA_CENTER)
       : INDIA_CENTER;
-    googleMapRef.current = new window.google.maps.Map(mapRef.current, {
-      center, zoom: viewMode === 'state' ? 7 : 5,
-      styles: MAP_STYLE, disableDefaultUI: true, backgroundColor: '#070c18',
-    });
+    try {
+      googleMapRef.current = new window.google.maps.Map(mapRef.current, {
+        center, zoom: viewMode === 'state' ? 7 : 5,
+        styles: MAP_STYLE, disableDefaultUI: true, backgroundColor: '#070c18',
+      });
+    } catch (err) {
+      console.error("StateAdminDashboard: Map init failed:", err);
+      mapReadyRef.current = false;
+    }
   }, [viewMode, userState]);
 
   useEffect(() => {
@@ -252,8 +257,12 @@ export default function StateAdminDashboard() {
 
   // Render markers
   useEffect(() => {
-    if (!googleMapRef.current || !window.google) return;
-    [...markersRef.current, ...circlesRef.current].forEach(m => m?.setMap(null));
+    if (!googleMapRef.current || !window.google?.maps?.Marker) return;
+    
+    // Cleanup
+    [...markersRef.current, ...circlesRef.current].forEach(m => {
+      if (m && typeof m.setMap === 'function') m.setMap(null);
+    });
     markersRef.current = []; circlesRef.current = [];
 
     const map = googleMapRef.current;
@@ -264,46 +273,54 @@ export default function StateAdminDashboard() {
     issuePool.forEach(issue => {
       if (!issue.location?.lat || !issue.location?.lng) return;
       const isCrit = issue.urgency_score >= 80;
-      const pin = new window.google.maps.Marker({
-        position: { lat: issue.location.lat, lng: issue.location.lng },
-        map, title: issue.summary || '',
-        icon: {
-          path: 'M0,-12 C-5,-12 -8,-7 -8,-3 C-8,5 0,12 0,12 C0,12 8,5 8,-3 C8,-7 5,-12 0,-12 Z',
-          fillColor: urgencyColor(issue.urgency_score || 0),
-          fillOpacity: 1, strokeColor: '#ffffff', strokeWeight: isCrit ? 2 : 0.5,
-          scale: isCrit ? 1.5 : 1.1, anchor: new window.google.maps.Point(0, 12),
-        },
-        animation: isCrit ? window.google.maps.Animation.BOUNCE : null,
-        zIndex: isCrit ? 100 : 30,
-      });
-      pin.addListener('click', () => {
-        if (viewMode === 'national') return toast('National view is read-only. Switch to State View.', { icon: '🔒' });
-        setActiveIssue(issue); setRightTab('deploy');
-        pin.setAnimation(null);
-        map.panTo({ lat: issue.location.lat, lng: issue.location.lng });
-      });
-      markersRef.current.push(pin);
+      try {
+        const pin = new window.google.maps.Marker({
+          position: { lat: issue.location.lat, lng: issue.location.lng },
+          map, title: issue.summary || '',
+          icon: {
+            path: 'M0,-12 C-5,-12 -8,-7 -8,-3 C-8,5 0,12 0,12 C0,12 8,5 8,-3 C8,-7 5,-12 0,-12 Z',
+            fillColor: urgencyColor(issue.urgency_score || 0),
+            fillOpacity: 1, strokeColor: '#ffffff', strokeWeight: isCrit ? 2 : 0.5,
+            scale: isCrit ? 1.5 : 1.1, anchor: new window.google.maps.Point(0, 12),
+          },
+          animation: (isCrit && window.google.maps.Animation) ? window.google.maps.Animation.BOUNCE : null,
+          zIndex: isCrit ? 100 : 30,
+        });
+        pin.addListener('click', () => {
+          if (viewMode === 'national') return toast('National view is read-only. Switch to State View.', { icon: '🔒' });
+          setActiveIssue(issue); setRightTab('deploy');
+          pin.setAnimation(null);
+          map.panTo({ lat: issue.location.lat, lng: issue.location.lng });
+        });
+        markersRef.current.push(pin);
+      } catch (err) {
+        console.warn("Marker creation failed:", err);
+      }
     });
 
     // Volunteer circles (state view only)
     if (viewMode === 'state') {
       stateVols.forEach(vol => {
         if (!vol.location?.lat || !vol.location?.lng) return;
-        const c = new window.google.maps.Circle({
-          map, center: { lat: vol.location.lat, lng: vol.location.lng },
-          radius: 30000,
-          fillColor: SKILL_COLORS[vol.skills?.[0] || vol.skill] || '#6b7280',
-          fillOpacity: vol.status === 'available' ? 0.08 : 0.02,
-          strokeColor: SKILL_COLORS[vol.skills?.[0] || vol.skill] || '#6b7280',
-          strokeOpacity: vol.status === 'available' ? 0.5 : 0.15,
-          strokeWeight: 1,
-        });
-        circlesRef.current.push(c);
+        try {
+          const c = new window.google.maps.Circle({
+            map, center: { lat: vol.location.lat, lng: vol.location.lng },
+            radius: 30000,
+            fillColor: SKILL_COLORS[vol.skills?.[0] || vol.skill] || '#6b7280',
+            fillOpacity: vol.status === 'available' ? 0.08 : 0.02,
+            strokeColor: SKILL_COLORS[vol.skills?.[0] || vol.skill] || '#6b7280',
+            strokeOpacity: vol.status === 'available' ? 0.5 : 0.15,
+            strokeWeight: 1,
+          });
+          circlesRef.current.push(c);
+        } catch (err) {
+          console.warn("Circle creation failed:", err);
+        }
       });
     }
     // ── Inter-state Request Lines ──────────────────────────────────────────
     assistanceRequests.forEach(req => {
-      if (req.status === 'rejected') return;
+      if (req.status === 'rejected' || !window.google?.maps?.Polyline) return;
       
       let from, to;
       if (req.status === 'pending') {
@@ -319,20 +336,24 @@ export default function StateAdminDashboard() {
       const isAccepted = req.status === 'accepted';
       const isForwarded = req.status === 'forwarded';
       
-      const line = new window.google.maps.Polyline({
-        map,
-        path: [from, to],
-        strokeColor: isAccepted ? '#22c55e' : isForwarded ? '#3b82f6' : '#ffd166',
-        strokeOpacity: 0.8,
-        strokeWeight: 2,
-        icons: [{
-          icon: { path: 'M 0,-1 0,1', strokeOpacity: 0.5, scale: 2 },
-          offset: '0',
-          repeat: '10px'
-        }],
-        zIndex: 5
-      });
-      circlesRef.current.push(line);
+      try {
+        const line = new window.google.maps.Polyline({
+          map,
+          path: [from, to],
+          strokeColor: isAccepted ? '#22c55e' : isForwarded ? '#3b82f6' : '#ffd166',
+          strokeOpacity: 0.8,
+          strokeWeight: 2,
+          icons: [{
+            icon: { path: 'M 0,-1 0,1', strokeOpacity: 0.5, scale: 2 },
+            offset: '0',
+            repeat: '10px'
+          }],
+          zIndex: 5
+        });
+        circlesRef.current.push(line);
+      } catch (err) {
+        console.warn("Polyline creation failed:", err);
+      }
     });
 
   }, [issues, stateVols, viewMode, userState, assistanceRequests]);

@@ -140,16 +140,21 @@ export default function Dashboard({ forcedView }) {
     return matchesSeverity && matchesState && matchesStatus;
   });
   const initMap = useCallback(() => {
-    if (!mapRef.current || mapInitRef.current) return;
+    if (!mapRef.current || mapInitRef.current || !window.google?.maps) return;
     mapInitRef.current = true;
-    googleMapRef.current = new window.google.maps.Map(mapRef.current, {
-      center: INDIA_CENTER,
-      zoom: 5,
-      styles: MAP_DARK_STYLE,
-      disableDefaultUI: true,
-      backgroundColor: '#0a0e19',
-      gestureHandling: 'greedy',
-    });
+    try {
+      googleMapRef.current = new window.google.maps.Map(mapRef.current, {
+        center: INDIA_CENTER,
+        zoom: 5,
+        styles: MAP_DARK_STYLE,
+        disableDefaultUI: true,
+        backgroundColor: '#0a0e19',
+        gestureHandling: 'greedy',
+      });
+    } catch (err) {
+      console.error("Dashboard: Map init failed:", err);
+      mapInitRef.current = false;
+    }
   }, []);
 
   useEffect(() => {
@@ -194,123 +199,141 @@ export default function Dashboard({ forcedView }) {
 
   // ── Re-render map overlays when data or layers change ────────────────────
   useEffect(() => {
-    if (!googleMapRef.current || !window.google) return;
+    if (!googleMapRef.current || !window.google?.maps) return;
     const map = googleMapRef.current;
 
     // Clear previous tactical overlays
     [...mapCirclesRef.current, ...mapMarkersRef.current, ...mapLinesRef.current]
-      .forEach((o) => o?.setMap(null));
+      .forEach((o) => {
+        if (o && typeof o.setMap === 'function') o.setMap(null);
+      });
     mapMarkersRef.current = [];
     mapCirclesRef.current = [];
     mapLinesRef.current   = [];
 
     // ── LAYER 1: Specialist Tactical Zones ─────────────────────────────────
-    if (mapLayers.zones) {
+    if (mapLayers.zones && window.google.maps.Circle) {
       filteredVolunteers
         .forEach((vol) => {
           if (!vol.location?.lat || !vol.location?.lng) return;
           const color = skillColor(vol.skills?.[0] || 'general');
-          const circle = new window.google.maps.Circle({
-            map,
-            center: { lat: vol.location.lat, lng: vol.location.lng },
-            radius: (vol.reach_radius_km || 50) * 1000,
-            fillColor: color,
-            fillOpacity: vol.status === 'available' ? 0.10 : 0.03,
-            strokeColor: color,
-            strokeOpacity: vol.status === 'available' ? 0.60 : 0.20,
-            strokeWeight: 1.5,
-          });
-          mapCirclesRef.current.push(circle);
+          try {
+            const circle = new window.google.maps.Circle({
+              map,
+              center: { lat: vol.location.lat, lng: vol.location.lng },
+              radius: (vol.reach_radius_km || 50) * 1000,
+              fillColor: color,
+              fillOpacity: vol.status === 'available' ? 0.10 : 0.03,
+              strokeColor: color,
+              strokeOpacity: vol.status === 'available' ? 0.60 : 0.20,
+              strokeWeight: 1.5,
+            });
+            mapCirclesRef.current.push(circle);
+          } catch (err) {
+            console.warn("Zone circle creation failed:", err);
+          }
         });
     }
 
     // ── LAYER 2: Specialist Location Pins ──────────────────────────────────
-    if (mapLayers.pins) {
+    if (mapLayers.pins && window.google.maps.Marker) {
       filteredVolunteers
         .forEach((vol) => {
           if (!vol.location?.lat || !vol.location?.lng) return;
           const color = skillColor(vol.skills?.[0] || 'general');
-          const marker = new window.google.maps.Marker({
-            map,
-            position: { lat: vol.location.lat, lng: vol.location.lng },
-            title: `${vol.name} — Specialist`,
-            icon: {
-              path: window.google.maps.SymbolPath.CIRCLE,
-              scale: vol.status === 'available' ? 7 : 4,
-              fillColor: color,
-              fillOpacity: 1,
-              strokeWeight: 2,
-              strokeColor: '#0a0e19',
-            },
-            zIndex: 10,
-          });
-          marker.addListener('click', () => {
-            toast(`${vol.name} · ${vol.skills?.[0] || 'Specialist'} · ${vol.reach_radius_km}km`, { icon: '🎯' });
-          });
-          mapMarkersRef.current.push(marker);
+          try {
+            const marker = new window.google.maps.Marker({
+              map,
+              position: { lat: vol.location.lat, lng: vol.location.lng },
+              title: `${vol.name} — Specialist`,
+              icon: {
+                path: window.google.maps.SymbolPath.CIRCLE,
+                scale: vol.status === 'available' ? 7 : 4,
+                fillColor: color,
+                fillOpacity: 1,
+                strokeWeight: 2,
+                strokeColor: '#0a0e19',
+              },
+              zIndex: 10,
+            });
+            marker.addListener('click', () => {
+              toast(`${vol.name} · ${vol.skills?.[0] || 'Specialist'} · ${vol.reach_radius_km}km`, { icon: '🎯' });
+            });
+            mapMarkersRef.current.push(marker);
+          } catch (err) {
+            console.warn("Pin marker creation failed:", err);
+          }
         });
     }
 
     // ── LAYER 3: Strategic Disaster Signals ────────────────────────────────
-    if (mapLayers.pins) {
+    if (mapLayers.pins && window.google.maps.Marker) {
       filteredIssues.forEach((issue) => {
         if (!issue.location?.lat || !issue.location?.lng) return;
         const color = urgencyColor(issue.urgency_score || 0);
         const isPulse = issue.urgency_score >= 80;
 
-        const pin = new window.google.maps.Marker({
-          map,
-          position: { lat: issue.location.lat, lng: issue.location.lng },
-          title: issue.summary,
-          icon: {
-            path: 'M 0,-16 C -6,-16 -10,-10 -10,-5 C -10,4 0,16 0,16 C 0,16 10,4 10,-5 C 10,-10 6,-16 0,-16 Z',
-            fillColor: color,
-            fillOpacity: 1,
-            strokeColor: '#ffffff',
-            strokeWeight: isPulse ? 2.5 : 1,
-            scale: isPulse ? 1.4 : 1.0,
-            anchor: new window.google.maps.Point(0, 16),
-          },
-          animation: isPulse ? window.google.maps.Animation.BOUNCE : null,
-          zIndex: isPulse ? 100 : 50,
-        });
+        try {
+          const pin = new window.google.maps.Marker({
+            map,
+            position: { lat: issue.location.lat, lng: issue.location.lng },
+            title: issue.summary,
+            icon: {
+              path: 'M 0,-16 C -6,-16 -10,-10 -10,-5 C -10,4 0,16 0,16 C 0,16 10,4 10,-5 C 10,-10 6,-16 0,-16 Z',
+              fillColor: color,
+              fillOpacity: 1,
+              strokeColor: '#ffffff',
+              strokeWeight: isPulse ? 2.5 : 1,
+              scale: isPulse ? 1.4 : 1.0,
+              anchor: new window.google.maps.Point(0, 16),
+            },
+            animation: (isPulse && window.google.maps.Animation) ? window.google.maps.Animation.BOUNCE : null,
+            zIndex: isPulse ? 100 : 50,
+          });
 
-        pin.addListener('click', () => {
-          setActiveIssue(issue);
-          map.panTo({ lat: issue.location.lat, lng: issue.location.lng });
-          if (isPulse) pin.setAnimation(null);
-        });
-        mapMarkersRef.current.push(pin);
+          pin.addListener('click', () => {
+            setActiveIssue(issue);
+            map.panTo({ lat: issue.location.lat, lng: issue.location.lng });
+            if (isPulse && typeof pin.setAnimation === 'function') pin.setAnimation(null);
+          });
+          mapMarkersRef.current.push(pin);
+        } catch (err) {
+          console.warn("Issue pin creation failed:", err);
+        }
       });
     }
 
     // ── LAYER 4: Operational Routing Lines ─────────────────────────────────
-    if (mapLayers.lines) {
+    if (mapLayers.lines && window.google.maps.Polyline) {
       filteredIssues.forEach((issue) => {
         if (!issue.routed_to_volunteer_id) return;
         const vol = filteredVolunteers.find((v) => v.id === issue.routed_to_volunteer_id) || volunteers.find((v) => v.id === issue.routed_to_volunteer_id);
         if (!vol?.location?.lat || !issue.location?.lat) return;
 
-        const line = new window.google.maps.Polyline({
-          map,
-          path: [
-            { lat: issue.location.lat, lng: issue.location.lng },
-            { lat: vol.location.lat, lng: vol.location.lng },
-          ],
-          strokeColor: urgencyColor(issue.urgency_score),
-          strokeOpacity: 0,
-          strokeWeight: 1.5,
-          icons: [{
-            icon: { path: 'M 0,-1 0,1', strokeOpacity: 0.7, scale: 3 },
-            offset: '0',
-            repeat: '12px',
-          }],
-          zIndex: 5,
-        });
-        mapLinesRef.current.push(line);
+        try {
+          const line = new window.google.maps.Polyline({
+            map,
+            path: [
+              { lat: issue.location.lat, lng: issue.location.lng },
+              { lat: vol.location.lat, lng: vol.location.lng },
+            ],
+            strokeColor: urgencyColor(issue.urgency_score),
+            strokeOpacity: 0,
+            strokeWeight: 1.5,
+            icons: [{
+              icon: { path: 'M 0,-1 0,1', strokeOpacity: 0.7, scale: 3 },
+              offset: '0',
+              repeat: '12px',
+            }],
+            zIndex: 5,
+          });
+          mapLinesRef.current.push(line);
+        } catch (err) {
+          console.warn("Routing line creation failed:", err);
+        }
       });
     }
-  }, [filteredIssues, filteredVolunteers, mapLayers, viewMode, userState]);
+  }, [filteredIssues, filteredVolunteers, mapLayers, viewMode, userState, volunteers]);
 
   // ── Stats (stale block removed — computed above with filteredVolunteers) ──
 
