@@ -145,11 +145,22 @@ export default function FieldCenter() {
     if (!googleMapRef.current || !window.google?.maps?.Marker) return;
     markersRef.current.forEach(m => m.setMap(null));
     markersRef.current = [];
-    tasks.filter(t => t.status !== 'completed').forEach(task => {
+    
+    const activeTasks = tasks.filter(t => t.status !== 'completed');
+    if (activeTasks.length === 0) return;
+
+    const bounds = new window.google.maps.LatLngBounds();
+    let hasPoints = false;
+
+    activeTasks.forEach(task => {
       if (!task.location?.lat || !task.location?.lng) return;
+      const pos = { lat: Number(task.location.lat), lng: Number(task.location.lng) };
+      bounds.extend(pos);
+      hasPoints = true;
+
       try {
         const marker = new window.google.maps.Marker({
-          position: { lat: task.location.lat, lng: task.location.lng },
+          position: pos,
           map: googleMapRef.current,
           title: task.summary || '',
           icon: {
@@ -162,6 +173,17 @@ export default function FieldCenter() {
         markersRef.current.push(marker);
       } catch (e) {}
     });
+
+    if (hasPoints) {
+      googleMapRef.current.fitBounds(bounds);
+      // Don't zoom in too far if there's only one point
+      if (activeTasks.length === 1) {
+        const listener = window.google.maps.event.addListener(googleMapRef.current, 'idle', () => {
+          googleMapRef.current.setZoom(12);
+          window.google.maps.event.removeListener(listener);
+        });
+      }
+    }
   }, [tasks]);
 
   // 3.5 Capture GPS
