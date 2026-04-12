@@ -406,12 +406,53 @@ export default function FieldCenter() {
                    </button>
                 </div>
 
-                <textarea
-                  value={intelContent}
-                  onChange={e => setIntelContent(e.target.value)}
-                  placeholder="> AWAITING TEXTURAL INTEL..."
-                  className="w-full bg-black/80 shadow-inner border border-[#1e2535] p-5 text-xs font-mono text-primary min-h-[140px] focus:border-[#ffd166]/50 outline-none transition-all placeholder:text-primary/20 resize-none mb-4"
-                />
+                <div className="relative mb-4">
+                  <textarea
+                    value={intelContent}
+                    onChange={e => setIntelContent(e.target.value)}
+                    placeholder="> AWAITING TEXTURAL INTEL..."
+                    className="w-full bg-black/80 shadow-inner border border-[#1e2535] p-5 text-xs font-mono text-primary min-h-[140px] focus:border-[#ffd166]/50 outline-none transition-all placeholder:text-primary/20 resize-none"
+                  />
+                  
+                  {/* Tactical Controls Overlay */}
+                  <div className="absolute top-3 right-3 flex flex-col gap-2">
+                    <button 
+                      type="button"
+                      className="w-8 h-8 rounded-full bg-black/40 border border-white/10 flex items-center justify-center text-white/40 hover:text-primary hover:border-primary transition-all group/voice"
+                      title="Initiate Voice Intel Capture"
+                    >
+                      <span className="material-symbols-outlined text-sm group-active/voice:animate-ping">mic</span>
+                    </button>
+                    
+                    <label className="w-8 h-8 rounded-full bg-black/40 border border-white/10 flex items-center justify-center text-white/40 hover:text-primary hover:border-primary transition-all cursor-pointer">
+                      <span className="material-symbols-outlined text-sm">image</span>
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        className="hidden" 
+                        onChange={(e) => {
+                          const file = e.target.files[0];
+                          if (file) {
+                            setIntelFile(file);
+                            toast.success(`Visual Payload Attached: ${file.name}`, { icon: '📷' });
+                          }
+                        }}
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                {intelFile && (
+                  <div className="mb-4 px-4 py-2 bg-primary/10 border border-primary/20 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-xs text-primary">attach_file</span>
+                      <span className="font-label text-[8px] text-primary uppercase tracking-widest truncate max-w-[200px]">{intelFile.name}</span>
+                    </div>
+                    <button onClick={() => setIntelFile(null)} className="text-primary hover:scale-110">
+                      <span className="material-symbols-outlined text-xs">close</span>
+                    </button>
+                  </div>
+                )}
 
                 <button 
                   onClick={handleTransmitSignal}
