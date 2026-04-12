@@ -231,7 +231,19 @@ export default function FieldCenter() {
     const loadToast = toast.loading('ARIA — Processing Tactical Signal...');
     try {
       const extracted = await extractIntelFrontend(intelContent);
-      const nearbyVol = volunteers.find(v => v.status === 'available' && v.location?.state === profile?.location?.state && v.id !== profile?.id);
+      
+      // Smart Allocation: Find nearby available volunteer with MATCHING SKILLS
+      const targetSkill = extracted.issue_type === 'medical' ? 'medical' : 
+                          extracted.issue_type === 'flood' ? 'rescue' :
+                          extracted.issue_type === 'fire' ? 'rescue' :
+                          extracted.issue_type === 'food' ? 'food' : 'general';
+
+      const nearbyVol = volunteers.find(v => 
+        v.status === 'available' && 
+        v.location?.state === profile?.location?.state && 
+        v.id !== profile?.id &&
+        (v.skills || []).includes(targetSkill)
+      );
       
       const payload = {
         ...extracted,
@@ -252,24 +264,25 @@ export default function FieldCenter() {
         await updateDoc(doc(db, 'volunteers', nearbyVol.id), { status: 'assigned' });
       }
 
-      const issueRef = await addDoc(collection(db, 'issues'), payload);
+      await addDoc(collection(db, 'issues'), payload);
 
       await addDoc(collection(db, 'events'), {
         type: nearbyVol ? 'assignment' : 'issue_created',
         message: nearbyVol 
-          ? `AUTO-ALLOCATION: Specialist ${nearbyVol.name} deployed to new signal in ${profile.district || 'Sector'}`
-          : `New Issue Reported: ${extracted.issue_type.toUpperCase()} in ${profile?.district || 'Alpha Sector'}`,
+          ? `AUTO-ALLOCATION: Specialist ${nearbyVol.name} (${targetSkill.toUpperCase()}) deployed to new ${extracted.issue_type.toUpperCase()} signal`
+          : `New Issue Reported: ${extracted.issue_type.toUpperCase()} in ${profile?.district || 'Alpha Sector'} - STANDBY FOR SPECIALIST`,
         state: profile?.location?.state || 'Unknown',
         timestamp: serverTimestamp()
       });
 
       if (nearbyVol) {
-        toast.success(`ARIA: Auto-Allocated Specialist ${nearbyVol.name}`, { icon: '🤖' });
+        toast.success(`ARIA: Auto-Allocated ${targetSkill.toUpperCase()} Specialist ${nearbyVol.name}`, { icon: '🤖' });
       } else {
-        toast.success('Intelligence Ingested Successfully', { id: loadToast });
+        toast.success(`Intelligence Ingested: Awaiting ${targetSkill.toUpperCase()} Specialist`, { id: loadToast });
       }
       setIntelContent('');
       setGpsCoords(null);
+      setIntelFile(null);
     } catch (err) {
       toast.error('Uplink Failed: ' + err.message, { id: loadToast });
     } finally {
