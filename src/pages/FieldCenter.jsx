@@ -82,7 +82,9 @@ export default function FieldCenter() {
     if (!profile || !db) return;
     const q = query(collection(db, 'issues'), where('routed_to_volunteer_id', '==', profile.id));
     return onSnapshot(q, snap => {
-      setTasks(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      const allTasks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      // Filter out completed tasks so the active missions deck is clean
+      setTasks(allTasks.filter(t => t.status !== 'completed'));
       setLoading(false);
     });
   }, [profile]);
