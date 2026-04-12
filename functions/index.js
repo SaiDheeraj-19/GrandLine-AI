@@ -87,6 +87,9 @@ async function saveAndRoute(issueData) {
 
 // ── INGEST: text report ─────────────────────────────────────────────────────
 exports.extractReport = onCall({ secrets: ["GEMINI_API_KEY"] }, async (req) => {
+  if (!req.auth) {
+    throw new HttpsError("unauthenticated", "Authentication required to ingest signals.");
+  }
   const { text, imageBase64, imageMimeType, source, userLat, userLng } = req.data;
 
   let extracted;
@@ -121,6 +124,9 @@ exports.extractReport = onCall({ secrets: ["GEMINI_API_KEY"] }, async (req) => {
 
 // ── INGEST: voice transcript ────────────────────────────────────────────────
 exports.ingestVoice = onCall({ secrets: ["GEMINI_API_KEY"] }, async (req) => {
+  if (!req.auth) {
+    throw new HttpsError("unauthenticated", "Authentication required for voice ingestion.");
+  }
   const { transcript, userLat, userLng } = req.data;
   if (!transcript?.trim()) throw new HttpsError("invalid-argument", "transcript required");
 
@@ -131,6 +137,9 @@ exports.ingestVoice = onCall({ secrets: ["GEMINI_API_KEY"] }, async (req) => {
 
 // ── VOLUNTEER REGISTRATION ──────────────────────────────────────────────────
 exports.registerVolunteer = onCall(async (req) => {
+  if (!req.auth) {
+    throw new HttpsError("unauthenticated", "Authentication required to register as a volunteer.");
+  }
   const data = req.data;
   const db = getFirestore();
 
@@ -177,7 +186,17 @@ exports.registerVolunteer = onCall(async (req) => {
 
 // ── SEED: populate demo volunteers + issues for demo ────────────────────────
 exports.seedDatabase = onCall(async (req) => {
+  if (!req.auth) {
+    throw new HttpsError("unauthenticated", "Authentication required to seed database.");
+  }
+  
+  // Verify super_admin role
   const db = getFirestore();
+  const userDoc = await db.collection("users").doc(req.auth.uid).get();
+  if (!userDoc.exists || userDoc.data().role !== "super_admin") {
+    throw new HttpsError("permission-denied", "Only Super Admins can seed the database.");
+  }
+
 
   const SEED_VOLUNTEERS = [
     { name: "Dr. Meera Nair",  phone: "+91-9400000001", ngo_name: "Kerala Medicos", location: { lat: 10.8505, lng: 76.2711, area_name: "Thrissur, Kerala",        state: "Kerala",         district: "Thrissur"  }, skills: ["medical","general"],          reach_radius_km: 60,  capacity: 100, languages: ["Malayalam","English"] },

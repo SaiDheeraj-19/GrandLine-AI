@@ -5,7 +5,7 @@
  * Routes disaster TO the nearest volunteer cluster — not the other way around.
  */
 
-const { getFirestore } = require("firebase-admin/firestore");
+const { getFirestore, FieldValue } = require("firebase-admin/firestore");
 const { getDistance } = require("./utils/haversine");
 
 // Skill requirements per disaster type — used for composite routing score
@@ -115,7 +115,7 @@ async function routeDisasterToVolunteer(issue) {
     routing_distance_km: best.distance_km,
     escalated: false,
     escalated_to_state: null,
-    routed_at: require("firebase-admin/firestore").FieldValue.serverTimestamp(),
+    routed_at: FieldValue.serverTimestamp(),
   });
 
   // Append to routing log for analytics
@@ -126,7 +126,7 @@ async function routeDisasterToVolunteer(issue) {
     skill_match_score: best.skill_match_score,
     eta_minutes: best.eta_minutes,
     all_candidates_count: candidates.length,
-    routed_at: require("firebase-admin/firestore").FieldValue.serverTimestamp(),
+    routed_at: FieldValue.serverTimestamp(),
     accepted: false,
     response_time_seconds: null,
   });

@@ -16,13 +16,31 @@ import StateAdminVolunteers from './pages/StateAdminVolunteers.jsx';
 import SuperAdminPersonnel from './pages/SuperAdminPersonnel.jsx';
 import ProfileSettings from './pages/ProfileSettings.jsx';
 
-function ProtectedRoute({ children }) {
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from './firebase.js';
+
+function ProtectedRoute({ children, requiredRole }) {
   const [user, setUser] = useState(null);
+  const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    return onAuthStateChanged(auth, (u) => {
+    return onAuthStateChanged(auth, async (u) => {
       setUser(u);
+      if (u) {
+        try {
+          const userSnap = await getDoc(doc(db, 'users', u.uid));
+          if (userSnap.exists()) {
+            const data = userSnap.data();
+            setUserData(data);
+            // Sync localStorage just in case, but rely on userData for internal logic
+            localStorage.setItem('grandline_role', data.role);
+            localStorage.setItem('grandline_state', data.state);
+          }
+        } catch (err) {
+          console.error("Error fetching user role:", err);
+        }
+      }
       setLoading(false);
     });
   }, []);
@@ -35,6 +53,11 @@ function ProtectedRoute({ children }) {
   );
 
   if (!user) return <Navigate to="/login" replace />;
+
+  if (requiredRole && userData?.role !== requiredRole) {
+    return <Navigate to="/" replace />;
+  }
+
   return children;
 }
 
@@ -60,11 +83,11 @@ export default function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           
-          <Route path="/dashboard/national" element={<ProtectedRoute><NationalMonitoring /></ProtectedRoute>} />
-          <Route path="/dashboard/national/admins" element={<ProtectedRoute><SuperAdminPersonnel /></ProtectedRoute>} />
-          <Route path="/dashboard/state"    element={<ProtectedRoute><StateAdminDashboard /></ProtectedRoute>} />
-          <Route path="/dashboard/state/volunteers" element={<ProtectedRoute><StateAdminVolunteers /></ProtectedRoute>} />
-          <Route path="/dashboard/volunteer" element={<ProtectedRoute><FieldCenter /></ProtectedRoute>} />
+          <Route path="/dashboard/national" element={<ProtectedRoute requiredRole="super_admin"><NationalMonitoring /></ProtectedRoute>} />
+          <Route path="/dashboard/national/admins" element={<ProtectedRoute requiredRole="super_admin"><SuperAdminPersonnel /></ProtectedRoute>} />
+          <Route path="/dashboard/state"    element={<ProtectedRoute requiredRole="state_admin"><StateAdminDashboard /></ProtectedRoute>} />
+          <Route path="/dashboard/state/volunteers" element={<ProtectedRoute requiredRole="state_admin"><StateAdminVolunteers /></ProtectedRoute>} />
+          <Route path="/dashboard/volunteer" element={<ProtectedRoute requiredRole="volunteer"><FieldCenter /></ProtectedRoute>} />
           <Route path="/dashboard/comms" element={<ProtectedRoute><SecureComms /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><ProfileSettings /></ProtectedRoute>} />
 

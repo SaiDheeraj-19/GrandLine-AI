@@ -1,0 +1,83 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    
+    function hasRole(role) {
+      return isAuthenticated() && getUserData().role == role;
+    }
+    
+    function isSuperAdmin() {
+      return hasRole('super_admin');
+    }
+    
+    function isStateAdmin() {
+      return hasRole('state_admin');
+    }
+
+    function isStateAdminOf(state) {
+      return isStateAdmin() && getUserData().state == state;
+    }
+
+    // Users collection
+    match /users/{userId} {
+      allow read: if request.auth.uid == userId || isSuperAdmin();
+      allow write: if isSuperAdmin(); // Only super admins can create/update users manually, 
+                                      // but we'll allow self-creation during demo registration for now
+                                      // Actually, for better security, use Cloud Functions for user creation.
+      allow create: if request.auth.uid == userId; 
+    }
+
+    // Issues collection
+    match /issues/{issueId} {
+      allow read: if isAuthenticated();
+      allow write: if isSuperAdmin() || isStateAdmin(); 
+      // More specific: only state admin of that state can write? 
+      // But some issues might not have a state yet.
+    }
+
+    // Volunteers collection
+    match /volunteers/{volId} {
+      allow read: if isAuthenticated();
+      allow write: if isSuperAdmin() || isStateAdmin(); // Ideally check state match
+    }
+
+    // Volunteer Zones
+    match /volunteer_zones/{zoneId} {
+      allow read: if isAuthenticated();
+      allow write: if isSuperAdmin() || isStateAdmin();
+    }
+
+    // Events collection (Audit Log)
+    match /events/{eventId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated(); // App components often log events
+    }
+
+    // Assistance Requests
+    match /assistance_requests/{requestId} {
+      allow read: if isSuperAdmin() || isStateAdmin();
+      allow write: if isSuperAdmin() || isStateAdmin();
+    }
+
+    // Notifications
+    match /notifications/{notifId} {
+      allow read: if isAuthenticated() && (request.auth.uid == resource.data.userId || resource.data.userId == 'super_admin' || isSuperAdmin());
+      allow write: if isAuthenticated(); // Various components send notifications
+    }
+
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

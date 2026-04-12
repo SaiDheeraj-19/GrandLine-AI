@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signInWithEmailAndPassword, signInAnonymously, createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../firebase.js';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { auth, db } from '../firebase.js';
 import toast from 'react-hot-toast';
 
 const INDIAN_STATES = [
@@ -65,6 +66,16 @@ export default function Login() {
         }
       }
 
+      // Sync user profile to Firestore (Single Source of Truth)
+      const userRef = doc(db, 'users', userCred.user.uid);
+      await setDoc(userRef, {
+        email: email,
+        role: role,
+        state: userState,
+        lastLogin: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+
       // Persist tactical role and state for session differentiation
       localStorage.setItem('grandline_role', role);
       localStorage.setItem('grandline_state', userState);
@@ -87,6 +98,16 @@ export default function Login() {
   const guestAccess = async () => {
     try {
       const userCred = await signInAnonymously(auth);
+      
+      // Sync guest profile
+      await setDoc(doc(db, 'users', userCred.user.uid), {
+        email: 'guest@grandline.ai',
+        role: 'super_admin',
+        state: 'All',
+        isGuest: true,
+        lastLogin: serverTimestamp()
+      });
+
       localStorage.setItem('grandline_role', 'super_admin');
       localStorage.setItem('grandline_state', 'All');
       localStorage.setItem('grandline_uid', userCred.user.uid);

@@ -29,46 +29,14 @@ export default function Sidebar() {
   const handleSeed = async () => {
     const loadToast = toast.loading('Synchronizing tactical infrastructure...');
     try {
-      const issuesCol = collection(db, 'issues');
-      const volCol = collection(db, 'volunteers');
-
-      const VOLUNTEERS = [
-        { name: 'Ravi Kumar', email: 'volunteer@grandline.ai', skills: ['medical', 'rescue'], location: { lat: 10.8505, lng: 76.2711, state: 'Kerala', district: 'Wayanad', area_name: 'Wayanad' }, status: 'active' },
-        { name: 'Sneha Singh', email: 'v2@gl.ai', skills: ['food', 'logistics'], location: { lat: 25.0961, lng: 85.3131, state: 'Bihar', district: 'Muzaffarpur', area_name: 'Muzaffarpur' }, status: 'active' },
-        { name: 'Amit Das', email: 'v3@gl.ai', skills: ['rescue', 'water'], location: { lat: 20.2961, lng: 85.8245, state: 'Odisha', district: 'Puri', area_name: 'Puri' }, status: 'active' },
-        { name: 'Priya Verma', email: 'v4@gl.ai', skills: ['counselling', 'medical'], location: { lat: 28.6139, lng: 77.2090, state: 'Delhi', district: 'Central Delhi', area_name: 'Connaught Place' }, status: 'active' },
-        { name: 'Vikram Rao', email: 'v5@gl.ai', skills: ['logistics', 'general'], location: { lat: 17.3850, lng: 78.4867, state: 'Telangana', district: 'Hyderabad', area_name: 'Banjara Hills' }, status: 'active' },
-      ];
-
-      const ISSUES = [
-        {
-          issue_type: 'flood', severity: 5, affected_count: 1200, urgency_score: 92,
-          summary: 'Severe landslide and flooding — 1200 displaced in Wayanad.',
-          recommended_action: 'Deploy NDRF Alpha Team and establish medical camp.',
-          skills_needed: ['rescue', 'medical', 'food'], 
-          location: { lat: 11.6854, lng: 76.1320, area_name: 'Wayanad', state: 'Kerala' }
-        },
-        {
-          issue_type: 'food', severity: 4, affected_count: 800, urgency_score: 78,
-          summary: 'Food shortage affecting 800 families after flood damage.',
-          recommended_action: 'Coordinate with local supplies and dispatch 2 tons of rations.',
-          skills_needed: ['food', 'logistics'], 
-          location: { lat: 26.1197, lng: 85.3910, area_name: 'Muzaffarpur', state: 'Bihar' }
-        },
-        {
-          issue_type: 'cyclone', severity: 5, affected_count: 2500, urgency_score: 95,
-          summary: 'Cyclone landfall imminent — 2500 coastal families at risk.',
-          recommended_action: 'Evacuate coastal villages to storm shelters.',
-          skills_needed: ['rescue', 'shelter', 'logistics'], 
-          location: { lat: 19.8135, lng: 85.8312, area_name: 'Puri', state: 'Odisha' }
-        }
-      ];
-
-      for (const v of VOLUNTEERS) await addDoc(volCol, { ...v, timestamp: serverTimestamp() });
-      for (const i of ISSUES) await addDoc(issuesCol, { ...i, timestamp: serverTimestamp(), source: 'seed', status: 'new', routing_status: 'pending' });
-
-      toast.success('Tactical Scenarios Initialized', { id: loadToast });
+      const { httpsCallable } = await import('firebase/functions');
+      const { functions } = await import('../firebase.js');
+      const seedFunc = httpsCallable(functions, 'seedDatabase');
+      const result = await seedFunc();
+      
+      toast.success(`Demo Data Synchronized: ${result.data.seeded_volunteers} volunteers, ${result.data.seeded_issues} issues.`, { id: loadToast });
     } catch (err) {
+      console.error(err);
       toast.error('Sync failed: ' + err.message, { id: loadToast });
     }
   };
@@ -120,7 +88,7 @@ export default function Sidebar() {
 
       {/* Action Footer */}
       <div className="p-4 space-y-3 border-t border-white/5 bg-white/2">
-        {role === 'admin' && (
+        {(role === 'admin' || role === 'super_admin') && (
           <button
             onClick={handleSeed}
             className="w-full hidden md:flex items-center justify-center gap-2 py-3 bg-white/5 border border-white/10 text-white/40 font-label text-[9px] tracking-widest uppercase hover:text-primary-container hover:border-primary-container/30 transition-all group"

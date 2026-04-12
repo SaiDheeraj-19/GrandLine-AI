@@ -9,9 +9,18 @@ function computeUrgency(issue) {
   const affectedScore = Math.min((issue.affected_count || 0) / 5000, 1) * 30;
   const resourceScore = computeResourceGap(issue.issue_type) * 15;
 
-  const hoursOld = issue.reported_at
-    ? (Date.now() - issue.reported_at.toMillis()) / 3_600_000
-    : 0;
+  let reportedMillis = 0;
+  if (issue.reported_at) {
+    if (typeof issue.reported_at.toMillis === 'function') {
+      reportedMillis = issue.reported_at.toMillis();
+    } else if (typeof issue.reported_at === 'number') {
+      reportedMillis = issue.reported_at;
+    } else if (issue.reported_at._seconds) {
+      reportedMillis = issue.reported_at._seconds * 1000;
+    }
+  }
+  
+  const hoursOld = reportedMillis ? (Date.now() - reportedMillis) / 3_600_000 : 0;
   const timeScore = Math.min(hoursOld / 24, 1) * 20;
 
   const total = Math.round(severityScore + affectedScore + timeScore + resourceScore);

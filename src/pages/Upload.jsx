@@ -38,23 +38,20 @@ export default function Upload() {
     setResult(null);
     const loadToast = toast.loading('Synchronizing with ARIA Neural Link...');
     try {
-      // Direct extraction using frontend logic
-      const intel = await extractIntelFrontend(
-        payload.source === 'image' ? payload.image : payload.text,
-        payload.source
-      );
+      const { httpsCallable } = await import('firebase/functions');
+      const { functions } = await import('../firebase.js');
+      const extractFunc = httpsCallable(functions, 'extractReport');
       
-      setResult(intel);
-
-      // Save to Firestore directly since we can't use the cloud function
-      await addDoc(collection(db, 'issues'), {
-        ...intel,
-        timestamp: serverTimestamp(),
+      const res = await extractFunc({
+        text: payload.source === 'image' ? null : payload.text,
+        imageBase64: payload.source === 'image' ? payload.image.split(',')[1] : null,
+        imageMimeType: payload.source === 'image' ? payload.image.split(';')[0].split(':')[1] : null,
         source: payload.source,
-        status: 'new',
-        routing_status: 'pending'
+        userLat: 20.5937, // Default India centre or get from geolocation
+        userLng: 78.9629
       });
-
+      
+      setResult(res.data.extracted);
       toast.success('Fresh Incident Intel Extracted & Merged', { id: loadToast });
     } catch (err) {
       toast.error('Neural Link Interrupted: ' + (err.message || 'Check Browser Console'), { id: loadToast });
