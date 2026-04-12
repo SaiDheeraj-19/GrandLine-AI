@@ -251,6 +251,30 @@ export default function NationalMonitoring() {
       });
     }
 
+    // ── VOLUNTEER MARKERS ────────────────────────────────────────────────
+    volunteers.forEach(vol => {
+      if (!vol.location?.lat || !vol.location?.lng) return;
+      
+      try {
+        const marker = new window.google.maps.Marker({
+          position: { lat: vol.location.lat, lng: vol.location.lng },
+          map: googleMapRef.current,
+          title: `Specialist: ${vol.name}`,
+          icon: {
+            path: window.google.maps.SymbolPath.CIRCLE,
+            fillColor: '#3b82f6',
+            fillOpacity: 0.8,
+            strokeColor: '#ffffff',
+            strokeWeight: 2,
+            scale: 6,
+          },
+        });
+        markersRef.current.push(marker);
+      } catch (err) {
+        console.warn("Volunteer marker failed:", err);
+      }
+    });
+
     // Coordination Lines
     assistanceRequests.forEach(req => {
       if (req.status === 'rejected' || !window.google?.maps?.Polyline) return;
@@ -286,8 +310,8 @@ export default function NationalMonitoring() {
       } catch (err) {
         console.warn("Polyline creation failed:", err);
       }
-    });
-  }, [issues, assistanceRequests, mapMode]);
+    }
+  }, [issues, assistanceRequests, volunteers, mapMode]);
 
   // ── Command Actions ─────────────────────────────────────────────────────
   const handleForwardRequest = async () => {

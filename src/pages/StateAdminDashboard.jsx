@@ -319,8 +319,21 @@ export default function StateAdminDashboard() {
             strokeWeight: 1,
           });
           circlesRef.current.push(c);
+
+          // ADD VOLUNTEER MARKER
+          const m = new window.google.maps.Marker({
+            map, position: { lat: vol.location.lat, lng: vol.location.lng },
+            title: vol.name,
+            icon: {
+              path: window.google.maps.SymbolPath.CIRCLE,
+              fillColor: SKILL_COLORS[vol.skills?.[0] || vol.skill] || '#6b7280',
+              fillOpacity: 1, strokeColor: '#ffffff', strokeWeight: 1,
+              scale: 5
+            }
+          });
+          markersRef.current.push(m);
         } catch (err) {
-          console.warn("Circle creation failed:", err);
+          console.warn("Circle/Marker creation failed:", err);
         }
       });
     }
