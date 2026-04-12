@@ -1,110 +1,98 @@
 # 🌊 GRANDLINE AI : The Autonomous Disaster Command Center
-
-![GrandLine AI Banner](https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=2072)
+![Banner](https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=2072)
 
 > **Centralized Command. Decentralized Execution. Real-time Survival.**
 
-GrandLine AI is a high-fidelity, production-grade disaster response platform designed to orchestrate massive resource allocation across state boundaries. By combining **Generative AI** for autonomous decision-making with a **Centralized Command Hierarchy**, it ensures that no crisis goes unanswered and no resource is wasted.
+### 🏆 Winning Entry for Disaster Response Innovation
+
+GrandLine AI is a production-grade, high-fidelity **Autonomous Disaster Operating System (ADOS)** designed to orchestrate national-scale emergency response. Built with a "Mobile-First, Tactical-Always" approach, it bridges the gap between field chaos and structured command intelligence.
 
 ---
 
-## ⚡ CORE CAPABILITIES
+## ⚡ MISSION-CRITICAL CAPABILITIES
 
-### 🏛️ Centralized Inter-State Assistance
-*   **Command-Based Routing:** State Admins uplink assistance signals directly to National HQ.
-*   **Authorized Deployment:** Super Admins review situational reports and route resource partners across state lines.
-*   **Jurisdictional Integrity:** Controlled escalation path ensures authorized and logged resource sharing.
+### 🗣️ SARVAM AI: Multi-Modal Indic Intelligence
+*   **Neural Voice Link**: Real-time speech-to-text pipeline using the **Sarvam AI 'saaras:v3'** model.
+*   **India-Native Localization**: Full support for **10 major Indian languages** (Hindi, Telugu, Tamil, Marathi, etc.), allowing field workers to report in their native dialect.
+*   **Dialect-Aware Transcription**: ARIA automatically calibrates its neural link to the regional dialect for human-level accuracy.
 
-### 🧠 AI-Driven Intelligence (Powered by Gemini)
-*   **Autonomous Resource Matching:** Real-time analysis of volunteer skills vs. incident requirements.
-*   **Crisis Scoring:** Automated urgency scoring for incoming disaster reports.
-*   **Tactical Briefings:** Instant AI-generated status reports for high-level decision makers.
+### 🧠 ARIA: The AI Allocation Engine
+*   **Autonomous Intent Extraction**: AI-driven analysis of raw field reports to identify urgency, categories (Medical, Rescue, Food), and location.
+*   **Skill-Aware Asset Allocation**: Dynamically routes reports to the nearest qualified specialist regardless of department—enforcing a universal response protocol.
+*   **Smart Resource Sync**: Real-time cross-state resource sharing reviewed by National HQ.
 
-### 🗺️ Tactical Command Interface
-*   **Real-time GPS Tracking:** Precise location monitoring for field volunteers.
-*   **Coordination Vectors:** Dynamic map polylines visualize support corridors and asset movement.
-*   **Glassmorphic Mission Control:** A cinematic, high-contrast dark UI designed for low-latency situational awareness.
+### 🏗️ Decentralized Operational Decks
+*   **Command Deck**: Precision mapping and mission tracking for en-route specialists.
+*   **Emergency Signal Uplink**: A dedicated, zero-latency interface for raising alerts with visual evidence & voice notes.
+*   **National Monitoring**: A 30,000-ft view for HQ to manage state-level escalations and inter-state support.
 
 ---
 
-## 🎭 ROLE-BASED ACCESS CONTROL (RBAC)
+## 🎭 THE COMMAND HIERARCHY
 
-| Role | Responsibility | Tactical Reach |
+| Tier | Role | Tactical Scope |
 | :--- | :--- | :--- |
-| **Super Admin** | National Oversight | Global Routing, Resource Analytics |
-| **State Admin** | Sector Command | Local Dispatch, HQ Escalation |
-| **Volunteer** | Field Execution | Incident Response, Real-time Reporting |
+| **National HQ** | Super Admin | Inter-State Asset Movement, Strategic Routing |
+| **Sector Bridge** | State Admin | Regional Logistics, Volunteer Coordination |
+| **Field Specialist** | Volunteer | Incident Reporting, Visual Verification, SAR Operations |
 
 ---
 
-## 🛠️ TECH STACK
+## 🛠️ THE TACTICAL STACK
 
-*   **Frontend:** React 18, Vite, Tailwind CSS (Glassmorphism)
-*   **Backend:** Firebase (Firestore, Authentication, Cloud Functions)
-*   **Intelligence:** Google Gemini 1.5 Pro
-*   **Visuals:** Google Maps Javascript SDK (Tactical Visualization)
-*   **Comms:** Secure Tactical Channel (Bespoke internal messaging)
-
----
-
-## 🚀 GETTING STARTED
-
-### Prerequisites
-*   Node.js (v18+)
-*   Firebase Project Credentials
-*   Google Maps API Key
-*   Gemini API Key
-
-### Installation
-
-1.  **Clone the Repository**
-    ```bash
-    git clone https://github.com/your-username/grandline-ai.git
-    cd grandline-ai
-    ```
-
-2.  **Install Dependencies**
-    ```bash
-    npm install
-    # and for functions
-    cd functions && npm install && cd ..
-    ```
-
-3.  **Environment Configuration**
-    Create a `.env.local` in the root:
-    ```env
-    VITE_FIREBASE_API_KEY=your_key
-    VITE_GOOGLE_MAPS_API_KEY=your_key
-    VITE_GEMINI_API_KEY=your_key
-    ```
-
-4.  **Launch Dashboard**
-    ```bash
-    npm run dev
-    ```
+*   **Logic Hub**: React 18 & Vite (High Performance)
+*   **Intelligence Node**: Google Gemini Pro (Situational Assessment)
+*   **Indic Voice Node**: Sarvam AI 'saaras:v3' (Dialect Transcription)
+*   **Operational Persistence**: Firebase (Firestore, Auth, Cloud Functions)
+*   **Mapping Grid**: Google Maps SDK (Tactical Overlays)
+*   **Styling**: Vanilla CSS with custom Tactical Dark Design System
 
 ---
 
-## 📐 ARCHITECTURAL ESCALATION PATH
+## 🚀 DEPLOYMENT PROTOCOL
 
-```mermaid
-graph TD
-    A[Disaster Incident] -->|Reported| B[State Sector Alpha]
-    B -->|Self-Assess| C{Resources Available?}
-    C -->|Yes| D[Local Volunteer Dispatch]
-    C -->|No| E[Signal Uplink to HQ]
-    E -->|Route| F[Super Admin Review]
-    F -->|Assign Partner| G[State Sector Beta]
-    G -->|Accept| H[Cross-State Asset Deployment]
-    H -->|Complete| D
+### 1. Terminal Setup
+```bash
+git clone https://github.com/SaiDheeraj-19/GrandLine-AI.git
+cd GrandLine-AI/smart-resource-allocation
+npm install
+```
+
+### 2. Neural Calibration (.env)
+```env
+VITE_FIREBASE_API_KEY=********
+VITE_GOOGLE_MAPS_API_KEY=********
+VITE_GEMINI_API_KEY=********
+# SARVAM AI Integration Active
+```
+
+### 3. Launch Signal
+```bash
+npm run dev
 ```
 
 ---
 
-## 📜 LICENSE
+## 📐 THE LOGIC CORRIDOR
 
-GrandLine AI is developed for high-impact humanitarian response and stability. All tactical patterns and AI logic are proprietary to the GrandLine Protocol.
+```mermaid
+graph TD
+    A[Field Anomaly] -->|Voice/Text/Image| B[Emergency Signal Uplink]
+    B -->|Analyzed By| C[ARIA Intelligence Node]
+    C -->|Auto-Assigned| D[Nearest Qualified Specialist]
+    C -->|If Critical| E[Sector Command Escalation]
+    E -->|Inter-State Support| F[National HQ Review]
+    F -->|Signal Approval| G[Cross-Province Asset Deployment]
+```
 
 ---
 
-> "In the face of chaos, data is the only anchor." — **GrandLine Command HQ**
+## 🛡️ SECURITY & STABILITY
+
+*   **Auth Enforcement**: Zero-anonymous access; mandatory cleared roles.
+*   **Tactical Dark Profile**: Enforced dark-mode UI for reduced glare in field conditions.
+*   **Deterministic Simulation**: Hardened for demo success with predictable emergency flows.
+
+---
+
+> "In the face of chaos, intelligence is the only lifeline." — **GrandLine Command HQ**
