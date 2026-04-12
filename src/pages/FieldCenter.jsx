@@ -335,77 +335,12 @@ export default function FieldCenter() {
                 <span className="font-label text-[10px] text-on-surface/40 uppercase tracking-widest">{tasks.length} Active Briefs</span>
             </div>
 
-            <div className="flex-1 overflow-y-auto space-y-4 py-6" style={{ scrollbarWidth: 'none' }}>
-               {loading ? (
-                 <div className="animate-pulse space-y-4">
-                    {[1,2].map(i => <div key={i} className="h-32 bg-white/5 rounded-sm"></div>)}
-                 </div>
-               ) : tasks.length === 0 ? (
-                 <div className="h-64 bg-[#0a0e19] shadow-[inset_0_0_20px_rgba(255,255,255,0.02)] border border-dashed border-[#1e2535] flex flex-col items-center justify-center gap-4 opacity-50">
-                    <span className="material-symbols-outlined text-5xl text-white/20">radar</span>
-                    <p className="font-label text-xs uppercase tracking-widest text-on-surface/40">Awaiting Command Authorization...</p>
-                 </div>
-               ) : tasks.map(task => {
-                 const isCrit = task.urgency_score >= 80;
-                 return (
-                  <div key={task.id} className={`group relative p-5 border ${isCrit ? 'border-red-500/30' : 'border-white/10'} bg-white/[0.02] hover:bg-white/[0.04] transition-all overflow-hidden`}>
-                    {/* Mission Header */}
-                    <div className="relative z-10">
-                      <div className="flex items-center gap-3 mb-2 text-white/80">
-                         <div className={`p-2 rounded-sm bg-white/5 border border-white/10 ${isCrit ? 'text-red-500' : 'text-primary'}`}>
-                           <span className="material-symbols-outlined text-xl">
-                              {task.issue_type === 'medical' ? 'medical_services' : task.issue_type === 'flood' ? 'waves' : 'warning_emerald'}
-                           </span>
-                         </div>
-                         <div className="flex-1 min-w-0">
-                           <h3 className="font-headline text-sm font-black uppercase tracking-tight truncate">{task.issue_type}</h3>
-                           <p className="font-label text-[8px] uppercase tracking-widest text-white/30">{task.location?.area_name}</p>
-                         </div>
-                         <div className={`px-2 py-1 rounded-xs font-label text-[7px] font-black uppercase tracking-widest ${isCrit ? 'bg-red-500 text-white' : 'bg-white/10 text-white/60'}`}>
-                            {task.urgency_score}% Crit
-                         </div>
-                      </div>
-
-                      <p className="font-body text-[10px] text-white/60 leading-relaxed mb-6 italic block border-l-2 border-white/5 pl-3">
-                        "{task.summary}"
-                      </p>
-
-                      <div className="grid grid-cols-2 gap-2 mt-auto pt-4 border-t border-white/5">
-                        {task.status === 'in_progress' ? (
-                          <label className="col-span-2 cursor-pointer">
-                            <div className="w-full py-2 bg-green-500 text-white font-label text-[8px] uppercase font-black tracking-[0.2em] hover:bg-green-600 transition-all text-center">
-                               Visual Verification Required
-                            </div>
-                            <input 
-                              type="file" 
-                              className="hidden" 
-                              accept="image/*"
-                              onChange={(e) => {
-                                setVerifyingTaskId(task.id);
-                                handleVerification(e);
-                              }}
-                            />
-                          </label>
-                        ) : (
-                          <button 
-                            onClick={() => updateTaskStatus(task.id, 'in_progress')}
-                            className="col-span-2 py-2 border border-primary text-primary font-label text-[8px] uppercase font-black tracking-[0.2em] hover:bg-primary/5 transition-all"
-                          >
-                             En Route / Initiating Signal
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                 )
-               })}
-            </div>
-
-            <div className="mt-auto space-y-4 pt-4 border-t border-white/5">
+            <div className="flex-1 overflow-y-auto pt-6 space-y-8" style={{ scrollbarWidth: 'none' }}>
+              {/* Emergency Uplink Section - Moved to Top for Visibility */}
               <div className="relative overflow-hidden p-6 bg-primary/5 border border-primary/20 group">
                 <div className="mb-4">
-                   <h2 className="font-headline text-lg font-bold text-primary uppercase tracking-tighter">Field Intelligence</h2>
-                   <p className="font-label text-[9px] text-white/30 uppercase mt-1">Direct ARIA Uplink</p>
+                   <h2 className="font-headline text-lg font-bold text-primary uppercase tracking-tighter">Emergency Signal Uplink</h2>
+                   <p className="font-label text-[9px] text-white/30 uppercase mt-1">Direct ARIA Intelligence Node</p>
                 </div>
 
                 <div className="flex items-center justify-between p-4 bg-black/40 border border-[#1e2535] rounded-sm mb-4">
@@ -546,6 +481,54 @@ export default function FieldCenter() {
                   {reporting ? 'UPLINKING...' : 'TRANSMIT TACTICAL SIGNAL'}
                   <span className="material-symbols-outlined text-sm transition-transform group-hover:translate-x-1">bolt</span>
                 </button>
+              </div>
+
+              {/* Your Missions Section - Now follows the Uplink */}
+              <div className="space-y-4">
+                <div className="flex justify-between items-end border-b border-white/5 pb-2">
+                  <div>
+                    <p className="font-label text-[9px] uppercase tracking-widest text-white/20">Authorized Targets</p>
+                    <h2 className="font-headline text-lg font-bold uppercase tracking-tight text-primary">Your Missions</h2>
+                  </div>
+                  <span className="font-label text-[9px] text-on-surface/40 uppercase tracking-widest">{tasks.length} Active</span>
+                </div>
+
+                {loading ? (
+                  <div className="animate-pulse space-y-4">
+                     {[1,2].map(i => <div key={i} className="h-32 bg-white/5 rounded-sm"></div>)}
+                  </div>
+                ) : tasks.length === 0 ? (
+                  <div className="h-32 bg-[#0a0e19] shadow-[inset_0_0_20px_rgba(255,255,255,0.02)] border border-dashed border-[#1e2535] flex flex-col items-center justify-center gap-2 opacity-50">
+                     <span className="material-symbols-outlined text-2xl text-white/20">radar</span>
+                     <p className="font-label text-[8px] uppercase tracking-widest text-on-surface/40">Radar Clear — Standby</p>
+                  </div>
+                ) : tasks.map(task => {
+                  const isCrit = task.urgency_score >= 80;
+                  return (
+                   <div key={task.id} className={`group relative p-4 border ${isCrit ? 'border-red-500/30' : 'border-white/10'} bg-white/[0.02] hover:bg-white/[0.04] transition-all overflow-hidden`}>
+                     <div className="relative z-10">
+                       <div className="flex items-center gap-3 mb-2 text-white/80">
+                          <div className={`p-1.5 rounded-sm bg-white/5 border border-white/10 ${isCrit ? 'text-red-500' : 'text-primary'}`}>
+                            <span className="material-symbols-outlined text-lg">
+                               {task.issue_type === 'medical' ? 'medical_services' : task.issue_type === 'flood' ? 'waves' : 'warning_emerald'}
+                            </span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-headline text-xs font-black uppercase tracking-tight truncate">{task.issue_type}</h3>
+                            <p className="font-label text-[7px] uppercase tracking-widest text-white/30">{task.location?.area_name}</p>
+                          </div>
+                       </div>
+                       <p className="font-body text-[9px] text-white/60 mb-2 truncate">"{task.summary}"</p>
+                       <button 
+                         onClick={() => updateTaskStatus(task.id, 'in_progress')}
+                         className="w-full py-1.5 border border-primary/20 text-primary font-label text-[7px] uppercase font-black tracking-widest hover:bg-primary/5 transition-all"
+                       >
+                          Open Brief
+                       </button>
+                     </div>
+                   </div>
+                  )
+                })}
               </div>
             </div>
            </div>
