@@ -334,11 +334,24 @@ export default function StateAdminDashboard() {
             scale: isMyState ? 5 : 4
           }
         });
+
+        // Click listener for volunteer info
+        m.addListener('click', () => {
+          setRightTab('volunteers');
+          setSelectedVolId(vol.id);
+          // Highlight the volunteer by scrolling to them if possible, or just selecting
+          toast.success(`UPLINK: ${vol.name.toUpperCase()}`, {
+            icon: 'person',
+            style: { background: '#070c18', color: '#fff', border: '1px solid #ffd16640', fontSize: '10px', fontFamily: 'Inter' }
+          });
+        });
+
         markersRef.current.push(m);
       } catch (err) {
         console.warn("Circle/Marker creation failed:", err);
       }
     });
+
 
     // ── Inter-state Request Lines ──────────────────────────────────────────
     assistanceRequests.forEach(req => {
@@ -1148,6 +1161,62 @@ export default function StateAdminDashboard() {
                     </button>
                   </form>
                 )}
+
+                {/* Selected Volunteer Dossier */}
+                {(() => {
+                  const selVol = volunteers.find(v => v.id === selectedVolId);
+                  if (!selVol) return null;
+                  const skill = selVol.skills?.[0] || selVol.skill || 'general';
+                  const isExternal = selVol.location?.state && selVol.location.state !== userState;
+
+                  return (
+                    <div className="flex-shrink-0 px-4 py-4 border-b border-[#ffd166]/20 bg-[#ffd166]/5 animate-in fade-in slide-in-from-right duration-500">
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-sm bg-primary-container/20 border border-primary-container/40 flex items-center justify-center">
+                             <span className="material-symbols-outlined text-primary-container">person_check</span>
+                          </div>
+                          <div>
+                            <h4 className="font-headline text-[11px] font-black text-white uppercase tracking-wider">{selVol.name}</h4>
+                            <p className="font-label text-[7px] text-[#ffd166] uppercase font-black">Tactical Dossier</p>
+                          </div>
+                        </div>
+                        <button onClick={() => setSelectedVolId('')} className="text-white/20 hover:text-white transition-colors">
+                           <span className="material-symbols-outlined text-xs">close</span>
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 mb-4">
+                         <div className="p-2 border border-white/5 bg-black/20">
+                            <p className="font-label text-[6px] uppercase text-white/30 mb-1">Status</p>
+                            <p className={`font-headline text-[8px] font-black uppercase ${selVol.status === 'available' ? 'text-green-400' : 'text-blue-400'}`}>{selVol.status}</p>
+                         </div>
+                         <div className="p-2 border border-white/5 bg-black/20">
+                            <p className="font-label text-[6px] uppercase text-white/30 mb-1">Specialization</p>
+                            <SkillDot skill={skill} />
+                         </div>
+                         <div className="p-2 border border-white/5 bg-black/20">
+                            <p className="font-label text-[6px] uppercase text-white/30 mb-1">Jurisdiction</p>
+                            <p className="font-headline text-[8px] font-black text-white uppercase">{selVol.state || selVol.location?.state || 'N/A'}</p>
+                         </div>
+                         <div className="p-2 border border-white/5 bg-black/20">
+                            <p className="font-label text-[6px] uppercase text-white/30 mb-1">Last Sync</p>
+                            <p className="font-headline text-[8px] font-black text-white/40 uppercase">ACTIVE HUB</p>
+                         </div>
+                      </div>
+
+                      <div className="space-y-2">
+                         <div className="flex items-center gap-2 text-white/40">
+                            <span className="material-symbols-outlined text-[10px]">location_on</span>
+                            <span className="font-label text-[7px] uppercase tracking-wider">{selVol.location?.area_name || selVol.district || 'COORDINATES LOCKED'}</span>
+                         </div>
+                         <div className="text-[7px] font-body text-white/30 leading-relaxed italic border-l border-white/10 pl-3">
+                           "Operational readiness verified. Specialist awaiting dispatch protocols."
+                         </div>
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* Volunteer list */}
                 <div className="flex-1 overflow-y-auto" style={{scrollbarWidth:'none'}}>
