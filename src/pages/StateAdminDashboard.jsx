@@ -305,39 +305,41 @@ export default function StateAdminDashboard() {
       }
     });
 
-    // Volunteer circles (state view only)
-    if (viewMode === 'state') {
-      stateVols.forEach(vol => {
-        if (!vol.location?.lat || !vol.location?.lng) return;
-        try {
-          const c = new window.google.maps.Circle({
-            map, center: { lat: vol.location.lat, lng: vol.location.lng },
-            radius: 30000,
-            fillColor: SKILL_COLORS[vol.skills?.[0] || vol.skill] || '#6b7280',
-            fillOpacity: vol.status === 'available' ? 0.08 : 0.02,
-            strokeColor: SKILL_COLORS[vol.skills?.[0] || vol.skill] || '#6b7280',
-            strokeOpacity: vol.status === 'available' ? 0.5 : 0.15,
-            strokeWeight: 1,
-          });
-          circlesRef.current.push(c);
+    // Volunteer circles (Tactical Visibility)
+    volunteers.forEach(vol => {
+      if (!vol.location?.lat || !vol.location?.lng) return;
+      const isMyState = vol.location?.state === userState || vol.state === userState;
+      
+      try {
+        const c = new window.google.maps.Circle({
+          map, center: { lat: vol.location.lat, lng: vol.location.lng },
+          radius: 30000,
+          fillColor: SKILL_COLORS[vol.skills?.[0] || vol.skill] || '#6b7280',
+          fillOpacity: isMyState ? (vol.status === 'available' ? 0.08 : 0.02) : 0.01,
+          strokeColor: SKILL_COLORS[vol.skills?.[0] || vol.skill] || '#6b7280',
+          strokeOpacity: isMyState ? (vol.status === 'available' ? 0.5 : 0.15) : 0.05,
+          strokeWeight: 1,
+        });
+        circlesRef.current.push(c);
 
-          // ADD VOLUNTEER MARKER
-          const m = new window.google.maps.Marker({
-            map, position: { lat: vol.location.lat, lng: vol.location.lng },
-            title: vol.name,
-            icon: {
-              path: window.google.maps.SymbolPath.CIRCLE,
-              fillColor: SKILL_COLORS[vol.skills?.[0] || vol.skill] || '#6b7280',
-              fillOpacity: 1, strokeColor: '#ffffff', strokeWeight: 1,
-              scale: 5
-            }
-          });
-          markersRef.current.push(m);
-        } catch (err) {
-          console.warn("Circle/Marker creation failed:", err);
-        }
-      });
-    }
+        // ADD VOLUNTEER MARKER
+        const m = new window.google.maps.Marker({
+          map, position: { lat: vol.location.lat, lng: vol.location.lng },
+          title: `${vol.name}${isMyState ? '' : ' (' + (vol.location.state || 'Ext') + ')'}`,
+          opacity: isMyState ? 1.0 : 0.4,
+          icon: {
+            path: window.google.maps.SymbolPath.CIRCLE,
+            fillColor: SKILL_COLORS[vol.skills?.[0] || vol.skill] || '#6b7280',
+            fillOpacity: 1, strokeColor: '#ffffff', strokeWeight: 1,
+            scale: isMyState ? 5 : 4
+          }
+        });
+        markersRef.current.push(m);
+      } catch (err) {
+        console.warn("Circle/Marker creation failed:", err);
+      }
+    });
+
     // ── Inter-state Request Lines ──────────────────────────────────────────
     assistanceRequests.forEach(req => {
       if (req.status === 'rejected' || req.status === 'completed' || !window.google?.maps?.Polyline) return;
@@ -381,7 +383,7 @@ export default function StateAdminDashboard() {
     });
 
 
-  }, [issues, stateVols, viewMode, userState, assistanceRequests]);
+  }, [issues, volunteers, viewMode, userState, assistanceRequests]);
 
   // ── Assistance Logic ─────────────────────────────────────────────────────
   const handleCreateRequest = async () => {
