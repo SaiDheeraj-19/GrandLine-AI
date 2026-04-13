@@ -88,7 +88,8 @@ export default function SecureComms() {
     if (activeTab === 'national') {
       q = query(collection(db, 'comms_national'), orderBy('timestamp', 'asc'), limit(150));
     } else if (activeTab === 'state') {
-      q = query(collection(db, `comms_state_${userState.replace(/\s+/g, '_')}`), orderBy('timestamp', 'asc'), limit(150));
+      const normalizedState = userState ? userState.trim().toLowerCase().replace(/\s+/g, '_') : 'unknown';
+      q = query(collection(db, `comms_state_${normalizedState}`), orderBy('timestamp', 'asc'), limit(150));
     } else if (activeTab === 'interstate') {
        if (!targetState) {
           setMessages([]);
@@ -132,7 +133,8 @@ export default function SecureComms() {
     if (activeTab === 'national') {
       await addDoc(collection(db, 'comms_national'), payload);
     } else if (activeTab === 'state') {
-      await addDoc(collection(db, `comms_state_${userState.replace(/\s+/g, '_')}`), payload);
+      const normalizedState = userState ? userState.trim().toLowerCase().replace(/\s+/g, '_') : 'unknown';
+      await addDoc(collection(db, `comms_state_${normalizedState}`), payload);
     } else if (activeTab === 'interstate') {
       await addDoc(collection(db, 'interstate_messages'), {
         ...payload,
