@@ -307,6 +307,8 @@ export default function Dashboard({ forcedView }) {
     if (mapLayers.lines && window.google.maps.Polyline) {
       filteredIssues.forEach((issue) => {
         if (!issue.routed_to_volunteer_id) return;
+        if (issue.status === 'completed' || issue.status === 'resolved') return;
+
         const vol = filteredVolunteers.find((v) => v.id === issue.routed_to_volunteer_id) || volunteers.find((v) => v.id === issue.routed_to_volunteer_id);
         if (!vol?.location?.lat || !issue.location?.lat) return;
 

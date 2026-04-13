@@ -5,6 +5,7 @@ import Sidebar from '../components/Sidebar.jsx';
 import toast from 'react-hot-toast';
 import { useLanguage } from '../utils/i18n.jsx';
 import { extractIntelFrontend } from '../utils/gemini.js';
+import { getDistance } from '../utils/haversine.js';
 import NotificationBell from '../components/NotificationBell.jsx';
 import BroadcastReceiver from '../components/BroadcastReceiver.jsx';
 
@@ -147,12 +148,20 @@ export default function RaiseIssue() {
                           extracted.issue_type === 'fire' ? 'rescue' :
                           extracted.issue_type === 'food' ? 'food' : 'general';
 
-      const nearbyVol = volunteers.find(v => 
-        v.status === 'available' && 
-        v.location?.state === profile?.location?.state && 
-        v.id !== profile?.id &&
-        (v.skills || []).includes(targetSkill)
-      );
+      const nearbyVols = volunteers
+        .filter(v => 
+          v.status === 'available' && 
+          v.id !== profile?.id &&
+          (v.skills || []).includes(targetSkill)
+        )
+        .map(v => ({
+          ...v,
+          distance: gpsCoords && v.location?.lat ? getDistance(gpsCoords, v.location) : 999999
+        }))
+        .sort((a, b) => a.distance - b.distance);
+
+      const nearbyVol = nearbyVols.length > 0 ? nearbyVols[0] : null;
+
       
       const payload = {
         ...extracted,

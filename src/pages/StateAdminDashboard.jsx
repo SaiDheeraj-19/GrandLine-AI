@@ -9,6 +9,7 @@ import Sidebar from '../components/Sidebar.jsx';
 import NotificationBell from '../components/NotificationBell.jsx';
 import BroadcastReceiver from '../components/BroadcastReceiver.jsx';
 import { useLanguage } from '../utils/i18n.jsx';
+import { getDistance } from '../utils/haversine.js';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 const MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
@@ -339,8 +340,12 @@ export default function StateAdminDashboard() {
     }
     // ── Inter-state Request Lines ──────────────────────────────────────────
     assistanceRequests.forEach(req => {
-      if (req.status === 'rejected' || !window.google?.maps?.Polyline) return;
+      if (req.status === 'rejected' || req.status === 'completed' || !window.google?.maps?.Polyline) return;
       
+      // Hide route if the associated issue is completed
+      const parentIssue = issues.find(i => i.id === req.issueId);
+      if (parentIssue?.status === 'completed' || parentIssue?.status === 'resolved') return;
+
       let from, to;
       if (req.status === 'pending') {
         from = STATE_CENTERS[req.fromState];
@@ -374,6 +379,7 @@ export default function StateAdminDashboard() {
         console.warn("Polyline creation failed:", err);
       }
     });
+
 
   }, [issues, stateVols, viewMode, userState, assistanceRequests]);
 
@@ -509,6 +515,37 @@ export default function StateAdminDashboard() {
       setDeploying(false);
     }
   };
+
+  const handleMarkComplete = async (issueId, volId) => {
+    const t = toast.loading('Synchronizing Mission Completion...');
+    try {
+      // 1. Mark issue as completed
+      await updateDoc(doc(db, 'issues', issueId), {
+        status: 'completed',
+        completedAt: serverTimestamp()
+      });
+
+      // 2. Make volunteer available
+      if (volId) {
+        await updateDoc(doc(db, 'volunteers', volId), { status: 'available' });
+      }
+
+      // 3. Log event
+      await addDoc(collection(db, 'events'), {
+        type: 'mission_completed',
+        message: `PROTOCOL SUCCESS: Mission ${issueId.slice(0,6)} closed by ${userState} command`,
+        state: userState,
+        issueId,
+        timestamp: serverTimestamp()
+      });
+
+      toast.success('Mission Data Securely Archived.', { id: t });
+      setActiveIssue(null);
+    } catch (err) {
+      toast.error('Sync failed: ' + err.message, { id: t });
+    }
+  };
+
 
   // ── Volunteer CRUD ────────────────────────────────────────────────────────
   const handleAddVolunteer = async (e) => {
@@ -905,15 +942,24 @@ export default function StateAdminDashboard() {
                       return vol ? (
                         <div className="p-3 bg-green-500/5 border border-green-500/15">
                           <p className="font-label text-[7px] uppercase text-green-400/60 mb-2 tracking-wider">Current Assignment</p>
-                          <div className="flex items-center gap-2">
-                            <div className="w-7 h-7 rounded-sm bg-green-500/20 flex items-center justify-center flex-shrink-0">
-                              <span className="material-symbols-outlined text-xs text-green-400">person</span>
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                              <div className="w-7 h-7 rounded-sm bg-green-500/20 flex items-center justify-center flex-shrink-0">
+                                <span className="material-symbols-outlined text-xs text-green-400">person</span>
+                              </div>
+                              <div>
+                                <p className="font-headline text-[10px] font-black text-white">{vol.name}</p>
+                                <SkillDot skill={vol.skills?.[0] || vol.skill || 'general'} />
+                              </div>
                             </div>
-                            <div>
-                              <p className="font-headline text-[10px] font-black text-white">{vol.name}</p>
-                              <SkillDot skill={vol.skills?.[0] || vol.skill || 'general'} />
-                            </div>
+                            <button 
+                              onClick={() => handleMarkComplete(activeIssue.id, vol.id)}
+                              className="px-2 py-1.5 bg-green-500/10 hover:bg-green-500/20 text-green-400 border border-green-500/30 font-label text-[7px] uppercase font-black transition-all"
+                            >
+                              Complete Mission
+                            </button>
                           </div>
+
                         </div>
                       ) : null;
                     })()}
@@ -932,25 +978,41 @@ export default function StateAdminDashboard() {
                         </div>
                       ) : (
                         <div className="space-y-1.5 max-h-40 overflow-y-auto" style={{scrollbarWidth:'none'}}>
-                          {availableVols.map(vol => (
-                            <div key={vol.id}
-                              onClick={() => setSelectedVolId(vol.id)}
-                              className={`flex items-center gap-3 p-3 border cursor-pointer transition-all
-                                ${selectedVolId === vol.id ? 'border-[#ffd166]/40 bg-[#ffd166]/5' : 'border-white/5 hover:border-white/10 bg-white/[0.01]'}`}>
-                              <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{background: SKILL_COLORS[vol.skills?.[0] || vol.skill] || '#6b7280'}} />
-                              <div className="flex-1">
-                                <p className="font-headline text-[10px] font-bold text-white">{vol.name}</p>
-                                <div className="flex items-center gap-2 mt-0.5">
-                                  <SkillDot skill={vol.skills?.[0] || vol.skill || 'general'} />
-                                  <span className="font-label text-[6px] text-white/20 uppercase">{vol.district || vol.location?.area_name}</span>
+                          {availableVols
+                            .map(vol => ({
+                              ...vol,
+                              dist: (activeIssue?.location?.lat && vol.location?.lat) 
+                                ? getDistance(activeIssue.location, vol.location) 
+                                : 999999
+                            }))
+                            .sort((a, b) => a.dist - b.dist)
+                            .map(vol => (
+                              <div key={vol.id}
+                                onClick={() => setSelectedVolId(vol.id)}
+                                className={`flex items-center gap-3 p-3 border cursor-pointer transition-all
+                                  ${selectedVolId === vol.id ? 'border-[#ffd166]/40 bg-[#ffd166]/5' : 'border-white/5 hover:border-white/10 bg-white/[0.01]'}`}>
+                                <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{background: SKILL_COLORS[vol.skills?.[0] || vol.skill] || '#6b7280'}} />
+                                <div className="flex-1">
+                                  <div className="flex justify-between items-center">
+                                    <p className="font-headline text-[10px] font-bold text-white">{vol.name}</p>
+                                    {vol.dist < 999999 && (
+                                      <span className="font-label text-[7px] text-[#ffd166] uppercase font-black">
+                                        {vol.dist.toFixed(1)} km
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-2 mt-0.5">
+                                    <SkillDot skill={vol.skills?.[0] || vol.skill || 'general'} />
+                                    <span className="font-label text-[6px] text-white/20 uppercase">{vol.district || vol.location?.area_name}</span>
+                                  </div>
                                 </div>
+                                {selectedVolId === vol.id && (
+                                  <span className="material-symbols-outlined text-[#ffd166] text-sm">check_circle</span>
+                                )}
                               </div>
-                              {selectedVolId === vol.id && (
-                                <span className="material-symbols-outlined text-[#ffd166] text-sm">check_circle</span>
-                              )}
-                            </div>
-                          ))}
+                            ))}
                         </div>
+
                       )}
                     </div>
 

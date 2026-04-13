@@ -3,6 +3,22 @@
 
 > **Centralized Command. Decentralized Execution. Real-time Survival.**
 
+---
+
+### 🌐 PROTOTYPE SUBMISSION INFRASTRUCTURE
+*   **Live MVP Link**: [https://studio-9997977370-a3c13.web.app](https://studio-9997977370-a3c13.web.app)
+*   **Demo Video**: [Add Link Here]
+*   **Project Deck**: [Add Link Here]
+
+#### 🔐 TEST CREDENTIALS
+| Role | Email | Password |
+| :--- | :--- | :--- |
+| **National Admin** | `admin@grandline.ai` | `password` |
+| **State Admin** | `keralahq@grandline.ai` | `password` |
+| **Volunteer/Field** | `specialist1@grandline.ai` | `password` |
+
+---
+
 ### 🏆 Winning Entry for Disaster Response Innovation
 
 GrandLine AI is a production-grade, high-fidelity **Autonomous Disaster Operating System (ADOS)** designed to orchestrate national-scale emergency response. Built with a "Mobile-First, Tactical-Always" approach, it bridges the gap between field chaos and structured command intelligence.

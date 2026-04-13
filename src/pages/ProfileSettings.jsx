@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { updateProfile, updatePassword } from 'firebase/auth';
-import { auth } from '../firebase.js';
+import { auth, db } from '../firebase.js';
+import { doc, getDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import Sidebar from '../components/Sidebar.jsx';
 import NotificationBell from '../components/NotificationBell.jsx';
 import toast from 'react-hot-toast';
@@ -16,12 +17,26 @@ export default function ProfileSettings() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [changingPassword, setChangingPassword] = useState(false);
+  const [status, setStatus] = useState('available');
+  const [volId, setVolId] = useState(null);
 
   useEffect(() => {
     if (user) {
       setName(user.displayName || '');
+      // Fetch volunteer status if applicable
+      if (role === 'volunteer') {
+        const fetchVol = async () => {
+          const q = query(collection(db, 'volunteers'), where('email', '==', user.email));
+          const snap = await getDocs(q);
+          if (!snap.empty) {
+            setVolId(snap.docs[0].id);
+            setStatus(snap.docs[0].data().status || 'available');
+          }
+        };
+        fetchVol();
+      }
     }
-  }, [user]);
+  }, [user, role]);
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -30,6 +45,12 @@ export default function ProfileSettings() {
     const t = toast.loading('Updating profile...');
     try {
       await updateProfile(user, { displayName: name });
+      if (volId) {
+        await updateDoc(doc(db, 'volunteers', volId), { 
+          name,
+          status 
+        });
+      }
       toast.success('Profile updated successfully', { id: t });
     } catch (error) {
       toast.error('Failed to update: ' + error.message, { id: t });
@@ -138,16 +159,33 @@ export default function ProfileSettings() {
                  <section>
                     <h3 className="font-label text-[10px] uppercase tracking-[0.25em] text-white/30 mb-4 block">Identity Configuration</h3>
                     <form onSubmit={handleSave} className="space-y-4 max-w-md">
-                       <div>
-                          <label className="font-label text-[8px] uppercase text-white/60 tracking-wider block mb-1.5">Official Display Name</label>
-                          <input 
-                            type="text" 
-                            required 
-                            value={name} 
-                            onChange={e => setName(e.target.value)} 
-                            className="w-full bg-[#060b14] border border-white/10 p-3 text-sm font-body text-white outline-none focus:border-[#ffd166]/50 transition-all" 
-                          />
-                       </div>
+                        <div>
+                           <label className="font-label text-[8px] uppercase text-white/60 tracking-wider block mb-1.5">Official Display Name</label>
+                           <input 
+                             type="text" 
+                             required 
+                             value={name} 
+                             onChange={e => setName(e.target.value)} 
+                             className="w-full bg-[#060b14] border border-white/10 p-3 text-sm font-body text-white outline-none focus:border-[#ffd166]/50 transition-all" 
+                           />
+                        </div>
+
+                        {role === 'volunteer' && (
+                          <div>
+                            <label className="font-label text-[8px] uppercase text-white/60 tracking-wider block mb-1.5">Tactical Status</label>
+                            <select 
+                              value={status} 
+                              onChange={e => setStatus(e.target.value)}
+                              className="w-full bg-[#060b14] border border-white/10 p-3 text-sm font-body text-white outline-none focus:border-[#ffd166]/50 transition-all appearance-none cursor-pointer"
+                            >
+                               <option value="available">ACTIVE / AVAILABLE</option>
+                               <option value="away">AWAY / ON BREAK</option>
+                               <option value="on_leave">ON LEAVE / UNAVAILABLE</option>
+                               <option value="inactive">INACTIVE</option>
+                            </select>
+                          </div>
+                        )}
+
                        <button 
                          type="submit" 
                          disabled={loading}

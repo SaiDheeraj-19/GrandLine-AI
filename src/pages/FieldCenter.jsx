@@ -130,6 +130,11 @@ export default function FieldCenter() {
          last_updated: serverTimestamp(),
          verified: true
       });
+      // Automatically make volunteer available again
+      if (profile?.id) {
+        await updateDoc(doc(db, 'volunteers', profile.id), { status: 'available' });
+      }
+
       await addDoc(collection(db, 'events'), {
         type: 'completed',
         message: `Mission Verified: Sector Secured by Specialist ${profile?.name}`,
@@ -214,7 +219,27 @@ export default function FieldCenter() {
         markersRef.current.push(marker);
       } catch (e) {}
     });
-  }, [tasks]);
+
+    // DRAW VOLUNTEERS
+    volunteers.forEach(vol => {
+      if (!vol.location?.lat || !vol.location?.lng) return;
+      if (vol.id === profile?.id) return; 
+      try {
+        const marker = new window.google.maps.Marker({
+          position: { lat: Number(vol.location.lat), lng: Number(vol.location.lng) },
+          map: googleMapRef.current,
+          title: `${vol.name} (${vol.status})`,
+          icon: {
+            path: window.google.maps.SymbolPath.CIRCLE,
+            fillColor: vol.status === 'available' ? '#22c55e' : '#6b7280',
+            fillOpacity: 1, strokeColor: '#ffffff', strokeWeight: 1, scale: 5
+          }
+        });
+        markersRef.current.push(marker);
+      } catch (e) {}
+    });
+  }, [tasks, volunteers, profile]);
+
 
   const captureGps = () => {
     if (!navigator.geolocation) return toast.error('Geolocation not supported');
